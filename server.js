@@ -1,3 +1,12 @@
+/*
+
+git status  // tells current status of files
+git add // Adds changed files to record.  -A will add all files
+git commit -m "message" // commits changes to be pushed
+git push // pushes all changes to github
+
+*/
+
 //
 // # SimpleServer
 //
@@ -30,18 +39,23 @@ router.use(express.static(path.resolve(__dirname, 'client')));
 var sockets = [];
 var displays = [];
 var cnt = 0;
-var posses = [[2,2], [2,9], [9,9], [9,2]];
+var posses = [
+  [1, 1],
+  [1, 8],
+  [8, 8],
+  [8, 1]
+];
 var colors = ["red", "blue", "green", "yellow"];
 
 
-class Player{
-  constructor(name){
+class Player {
+  constructor(name) {
     // console.log(sockets.length)
     this.id = cnt;
-    this.color = colors[this.id-1]
+    this.color = colors[this.id - 1]
     this.name = name;
-    this.holding = 0;
-    this.pos = posses[this.id-1];
+    this.energy = 0;
+    this.pos = posses[this.id - 1];
     this.dir = "";
   }
 }
@@ -59,55 +73,83 @@ var game = {
 };
 io.on('connection', function(socket) {
   if (sockets.length < 4) {
+    
+    /* @Desc: Takes new direction from player and determines new position
+     * @Params: data{} - dir(srt): direction chosen by player - name(str): name of player sending data
+     */
+    socket.on("new direction", function(data) {
+// console.log(data.dir + "M OFDFMDOFD")
+// console.log((data.name === game.players[game.idTurn].name))
+      if (data.name === game.players[game.idTurn].name) {
+console.log(game.players[game.idTurn].pos)
 
+        if (data.dir == "north" && game.players[game.idTurn].pos[0] > 0) {
+          game.players[game.idTurn].pos[0]--;
+        }
+        else if (data.dir == "east" && game.players[game.idTurn].pos[1] <= 8) {
+          game.players[game.idTurn].pos[1]++;
+        }
+        else if (data.dir == "south" && game.players[game.idTurn].pos[0] <= 8) {
+          game.players[game.idTurn].pos[0]++;
+        }
+        else if (data.dir == "west" && game.players[game.idTurn].pos[1] > 0) {
+          game.players[game.idTurn].pos[1]--;
+        }
+        else {
+          console.log("TF??!?!?!?! " + data.dir)
+        }
+        console.log(game.players[game.idTurn].pos)
+      }
+    });
 
-socket.on("display", function(){
-  displays.push(socket)
-})
+    socket.on("display", function() {
+      displays.push(socket)
+    })
 
     socket.on("name", function(name) {
-    cnt++;
-        sockets.push(socket);
+      cnt++;
+      sockets.push(socket);
 
       console.log("someone connected");
-    
-      game.players.push(new Player(name));   
+
+      game.players.push(new Player(name));
       game.idTurn++;
-      broadcast("queue", "There are " + sockets.length + " people connencted.");
-      dBroadcast("queue",  game);
+      // console.log("SOCKET LENGTH "+ sockets.length)
+      broadcast("queue", "There are " + game.players.length + " people connencted.");
+      dBroadcast("queue", game);
       console.log(game.players[game.players.length - 1])
     })
 
-// socket.on("update", function(str){
-  // if()
-// })
-if(game.players.length == 2){ // if its 3!! its  plus 1 since on connecttttttttt
+    // socket.on("update", function(str){
+    // if()
+    // })
+    if (game.players.length == 1) { // if its 3!! its  plus 1 since on connecttttttttt
 
 
-console.log("ITS GSTARING")
+      console.log("ITS GSTARING")
 
-var loop  = setInterval(function(){
-  if(game.turn >= 200){
-    clearInterval(loop)
-  }
-  // game.idTurn = game.turn % game.players.length;
-  // game.turn++;
+      var loop = setInterval(function() {
+        if (game.turn >= 200) {
+          clearInterval(loop)
+        }
+        // game.idTurn = game.turn % game.players.length;
+        // game.turn++;
 
-  for(var i=0;i<game.players.length;i++){
-      game.turn++;
-    game.idTurn  = game.turn % game.players.length;
-dBroadcast("draw", game)
-broadcast("update", game);
-  
-    
-    
-  }
-}, 300)
+          game.turn++;
+          game.idTurn = game.turn % game.players.length;
+          console.log(game.idTurn)
+          dBroadcast("draw", game)
+          broadcast("update", game);
+          //ewew
 
-}
-// } else{
-  // console.log(sockets.length)
-// }
+
+        
+      }, 300)
+
+    }
+    // } else{
+    // console.log(sockets.length)
+    // }
 
 
 
@@ -128,8 +170,9 @@ function broadcast(event, data) {
     socket.emit(event, data);
   });
 }
-function dBroadcast(event, data){
-    displays.forEach(function(socket) {
+
+function dBroadcast(event, data) {
+  displays.forEach(function(socket) {
     socket.emit(event, data);
   });
 }

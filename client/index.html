@@ -26,13 +26,57 @@
 <body>
 
   <canvas id="canvas" width="600px" height="600px"></canvas>
+  
+  <div style = "display: none;">
+  <img src = "imgs/redforwards.png" id = "rednorth"/>
+  <img src = "imgs/redbackwards.png" id = "redsouth"/>
+  <img src = "imgs/redright.png" id = "redeast"/>
+  <img src = "imgs/redleft.png" id = "redwest"/>
+  
+  <img src = "imgs/blueforwards.png" id = "bluenorth"/>
+  <img src = "imgs/bluebackwards.png" id = "bluesouth"/>
+  <img src = "imgs/blueright.png" id = "blueeast"/>
+  <img src = "imgs/blueleft.png" id = "bluewest"/>
+  
+  <img src = "imgs/greyforwards.png" id = "greynorth"/>
+  <img src = "imgs/greybackwards.png" id = "greysouth"/>
+  <img src = "imgs/greyright.png" id = "greyeast"/>
+  <img src = "imgs/greyleft.png" id = "greywest"/>
+  
+  <img src = "imgs/yellowforwards.png" id = "yellownorth"/>
+  <img src = "imgs/yellowbackwards.png" id = "yellowsouth"/>
+  <img src = "imgs/yellowright.png" id = "yelloweast"/>
+  <img src = "imgs/yellowleft.png" id = "yellowwest"/>
+  </div>
   <script src="/js/jquery.min.js"></script>
 
   <!--<script src="/js/bootstrap.min.js"></script>-->
   <!--<script src="/js/angular.min.js"></script>-->
   <script>
+  
+  
+  var images = {
+    rednorth: document.getElementById("rednorth"),
+    redsouth: document.getElementById("redsouth"),
+    redeast: document.getElementById("redeast"),
+    redwest: document.getElementById("redwest"),
+    bluenorth: document.getElementById("bluenorth"),
+    bluesouth: document.getElementById("bluesouth"),
+    blueeast: document.getElementById("blueeast"),
+    bluewest: document.getElementById("bluewest"),
+    greynorth: document.getElementById("greynorth"),
+    greysouth: document.getElementById("greysouth"),
+    greyeast: document.getElementById("greyeast"),
+    greywest: document.getElementById("greywest"),
+    yellownorth: document.getElementById("yellownorth"),
+    yellowsouth: document.getElementById("yellowsouth"),
+    yelloweast: document.getElementById("yelloweast"),
+    yellowwest: document.getElementById("yellowwest")
+  }
+  
+  
     var socket = io.connect();
-    var players = [];
+    var player = [];
     socket.emit("display");
     var game;
    
@@ -45,9 +89,9 @@
     var ySize = canvas.height / size;
     var grid = [];
     var str = ""
-    for (let i = 1; i <= size; i++) {
+    for (let i = 0; i <= size; i++) {
       grid[i] = [];
-      for (let j = 1; j <= size; j++) {
+      for (let j = 0; j <= size; j++) {
         grid[i][j] = 0;
       }
     }
@@ -68,7 +112,7 @@
     }
     class Player {
       constructor() {
-       console.log(game)
+       console.log(game.players.length)
        
         this.x = game.players[game.players.length-1].pos[1];
         this.y = game.players[game.players.length-1].pos[0];
@@ -78,14 +122,16 @@
         var str = "";
       }
       show() {
-        ctx.fillStyle = this.color;
-        ctx.fillRect((this.x - 1) * xSize, (this.y - 1) * ySize, xSize, ySize);
+        ctx.fillStyle = game.players[game.idTurn].color;
+        console.log(game.players.length + "      and     "  + game.idTurn)
+        
+        ctx.fillRect((game.players[game.idTurn].pos[1]) * xSize, (game.players[game.idTurn].pos[0]) * ySize, xSize, ySize);
       }
       update() {
         grid[this.x][this.y] = "P";
         str = "";
-        for (let i = 1; i <= size; i++) {
-          for (let j = 1; j <= size; j++) {
+        for (let i = 0; i <= size; i++) {
+          for (let j = 0; j <= size; j++) {
             str += grid[j][i] + " "
             if (j % (size) == 0) {
               str += "\n<br>"
@@ -111,11 +157,11 @@
       clear() {
         grid[this.x][this.y] = 0;
         ctx.fillStyle = "white";
-        ctx.fillRect(((this.x - 1) * xSize), ((this.y - 1) * ySize), this.w, this.h);
+        ctx.fillRect(((this.x ) * xSize), ((this.y ) * ySize), this.w, this.h);
         ctx.fillStyle = "black";
         ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
-        ctx.strokeRect((this.x - 1) * xSize, (this.y - 1) * ySize, this.w, this.h);
+        ctx.strokeRect((this.x ) * xSize, (this.y ) * ySize, this.w, this.h);
       }
     }
     // var player = new Player();
@@ -193,26 +239,26 @@
      socket.on("queue", function(data) {
 // console.log(data);
       game = data;
-players.push(new Player())
+player.push(new Player())
 // console.log(players)
 // console.log(game);
-    for (var i = 0; i < players.length; i++) {
-        players[i].clear();
-        players[i].move();
-        players[i].update();
+    for (var i = 0; i < player.length; i++) {
+        player[i].clear();
+        // players[i].move();
+        player[i].update();
         // player.dir = myDir[Math.floor(Math.random() * 4)]
-        players[i].show();
+        // players[i].show();
       }
     })
 socket.on("draw", function(data){
   console.log(game)
   game = data;
-      for (var i = 0; i < players.length; i++) {
-        players[i].clear();
-        players[i].move();
-        players[i].update();
+      for (var i = 0; i < player.length; i++) {
+        player[i].clear();
+        // players[i].move();
+        player[i].update();
         // player.dir = myDir[Math.floor(Math.random() * 4)]
-        players[i].show();
+        player[i].show();
       }
 })
  
