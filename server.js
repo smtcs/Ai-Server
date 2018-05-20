@@ -12,7 +12,7 @@ git push // pushes all changes to github
 //
 // A simple chat server using Socket.IO, Express, and Async.
 //
-
+var fs = require("fs")
 var http = require('http');
 var path = require('path');
 
@@ -30,6 +30,9 @@ var app = express();
 // Creates a new instance of SimpleServer with the following options:
 //  * `port` - The HTTP port to listen on. If `process.env.PORT` is set, _it overrides this value_.
 //
+var data= JSON.parse(fs.readFileSync("database.json"));
+
+
 var router = express();
 var server = http.createServer(router);
 var io = socketio.listen(server);
@@ -69,19 +72,28 @@ var game = {
   map: "",
   players: [],
   idTurn: 0,
-  turn: 0
+  turn: 0,
+  bases:[]
 };
 io.on('connection', function(socket) {
-  if (sockets.length < 4) {
+  if (game.players.length < 4) {
+    
+    socket.on("newPlayer", function(obj){
+      data[obj.key] = {username: obj.username, wins: 0, permName: false}
+fs.writeFileSync("database.json", JSON.stringify(data, null, 2) )
+    })
+    
+    
     
     /* @Desc: Takes new direction from player and determines new position
      * @Params: data{} - dir(srt): direction chosen by player - name(str): name of player sending data
      */
+     
     socket.on("new direction", function(data) {
+      console.log(game.players[0])
 // console.log(data.dir + "M OFDFMDOFD")
 // console.log((data.name === game.players[game.idTurn].name))
       if (data.name === game.players[game.idTurn].name) {
-console.log(game.players[game.idTurn].pos)
 
         if (data.dir == "north" && game.players[game.idTurn].pos[0] > 0) {
           game.players[game.idTurn].pos[0]--;
@@ -95,49 +107,68 @@ console.log(game.players[game.idTurn].pos)
         else if (data.dir == "west" && game.players[game.idTurn].pos[1] > 0) {
           game.players[game.idTurn].pos[1]--;
         }
-        else {
-          console.log("TF??!?!?!?! " + data.dir)
-        }
-        console.log(game.players[game.idTurn].pos)
+      game.players[game.idTurn].dir = data.dir;
       }
     });
 
     socket.on("display", function() {
       displays.push(socket)
+      dBroadcast("queue", game)
     })
+function checkKey(key){
+let temp= JSON.parse(fs.readFileSync("database.json"));
 
-    socket.on("name", function(name) {
+let arr = Object.keys(temp)
+// console.log(arr)
+for(let i=0;i<arr.length;i++){
+  if(key == arr[i]){
+    // console.log(temp[key].username)
+
+    return temp[key].username;
+    
+  }
+}
+return false;
+
+}
+    socket.on("name", function(key) {
+      if (checkKey(key)){
+        let name = checkKey(key)
+        
+        
+        
       cnt++;
       sockets.push(socket);
+sockets[sockets.length-1].emit("getName", name)
 
       console.log("someone connected");
 
       game.players.push(new Player(name));
-      game.idTurn++;
+      // game.idTurn++;
       // console.log("SOCKET LENGTH "+ sockets.length)
       broadcast("queue", "There are " + game.players.length + " people connencted.");
       dBroadcast("queue", game);
-      console.log(game.players[game.players.length - 1])
-    })
-
-    // socket.on("update", function(str){
-    // if()
-    // })
-    if (game.players.length == 1) { // if its 3!! its  plus 1 since on connecttttttttt
-
+      
+      
+      
+  
+      
+        if (game.players.length == 2) {
+    console.log(sockets.length +  "IF THIS ISNT 2 I SWEAR TO GOD")
 
       console.log("ITS GSTARING")
 
       var loop = setInterval(function() {
         if (game.turn >= 200) {
           clearInterval(loop)
+          game.players.pop();
+          game.players.pop();
         }
         // game.idTurn = game.turn % game.players.length;
         // game.turn++;
 
           game.turn++;
           game.idTurn = game.turn % game.players.length;
-          console.log(game.idTurn)
           dBroadcast("draw", game)
           broadcast("update", game);
           //ewew
@@ -146,7 +177,21 @@ console.log(game.players[game.idTurn].pos)
         
       }, 300)
 
+} 
     }
+    else{
+  console.log("failleddddd")
+}
+      
+      
+      
+      
+    })
+
+    // socket.on("update", function(str){
+    // if()
+    // })
+  
     // } else{
     // console.log(sockets.length)
     // }
@@ -154,7 +199,7 @@ console.log(game.players[game.idTurn].pos)
 
 
     socket.on('disconnect', function() {
-      sockets.splice(sockets.indexOf(socket), 1);
+      // sockets.splice(sockets.indexOf(socket), 1);
     });
 
 

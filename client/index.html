@@ -28,34 +28,52 @@
   <canvas id="canvas" width="600px" height="600px"></canvas>
   
   <div style = "display: none;">
-  <img src = "imgs/redforwards.png" id = "rednorth"/>
-  <img src = "imgs/redbackwards.png" id = "redsouth"/>
+  <img src = "imgs/redbackwards.png" id = "rednorth"/>
+  <img src = "imgs/redforwards.png" id = "redsouth"/>
   <img src = "imgs/redright.png" id = "redeast"/>
   <img src = "imgs/redleft.png" id = "redwest"/>
   
-  <img src = "imgs/blueforwards.png" id = "bluenorth"/>
-  <img src = "imgs/bluebackwards.png" id = "bluesouth"/>
+  <img src = "imgs/bluebackwards.png" id = "bluenorth"/>
+  <img src = "imgs/blueforwards.png" id = "bluesouth"/>
   <img src = "imgs/blueright.png" id = "blueeast"/>
   <img src = "imgs/blueleft.png" id = "bluewest"/>
   
-  <img src = "imgs/greyforwards.png" id = "greynorth"/>
-  <img src = "imgs/greybackwards.png" id = "greysouth"/>
+  <img src = "imgs/greybackwards.png" id = "greynorth"/>
+  <img src = "imgs/greyforwards.png" id = "greysouth"/>
   <img src = "imgs/greyright.png" id = "greyeast"/>
   <img src = "imgs/greyleft.png" id = "greywest"/>
   
-  <img src = "imgs/yellowforwards.png" id = "yellownorth"/>
-  <img src = "imgs/yellowbackwards.png" id = "yellowsouth"/>
+  <img src = "imgs/yellowbackwards.png" id = "yellownorth"/>
+  <img src = "imgs/yellowforwards.png" id = "yellowsouth"/>
   <img src = "imgs/yellowright.png" id = "yelloweast"/>
   <img src = "imgs/yellowleft.png" id = "yellowwest"/>
   </div>
+  <div style = "float: right;">
+  <input id = "username"></input>
+<button id = "create">Create a bot</button>
+<div id = "after"></div>
+</div>
+  
+  
   <script src="/js/jquery.min.js"></script>
 
   <!--<script src="/js/bootstrap.min.js"></script>-->
   <!--<script src="/js/angular.min.js"></script>-->
   <script>
-  
-  
-  var images = {
+      var socket = io.connect();
+  var btn = document.getElementById("create");
+var username = document.getElementById("username");
+var after = document.getElementById("after");
+btn.onclick = function(){
+btn.style.display = "none";
+username.style.display = "none";
+var key = Math.random().toString(36).substr(2, 35);
+after.innerHTML = "Username: " + username.value + "<br>key: " + key;
+socket.emit("newPlayer", {"key": key, "username": username.value})
+}
+
+
+  var playerImgs = {
     rednorth: document.getElementById("rednorth"),
     redsouth: document.getElementById("redsouth"),
     redeast: document.getElementById("redeast"),
@@ -75,8 +93,7 @@
   }
   
   
-    var socket = io.connect();
-    var player = [];
+
     socket.emit("display");
     var game;
    
@@ -99,36 +116,28 @@
 
     function drawGrid() {
       ctx.beginPath();
-      for (let x = 0; x < canvas.width; x += xSize) {
+      for (let x = 0; x <= canvas.width; x += xSize) {
         ctx.moveTo(x, 0);
         ctx.lineTo(x, canvas.height);
         ctx.stroke();
       }
-      for (let y = 0; y < canvas.width; y += ySize) {
+      for (let y = 0; y <= canvas.width; y += ySize) {
         ctx.moveTo(0, y);
         ctx.lineTo(canvas.width, y);
         ctx.stroke();
       }
     }
-    class Player {
-      constructor() {
-       console.log(game.players.length)
-       
-        this.x = game.players[game.players.length-1].pos[1];
-        this.y = game.players[game.players.length-1].pos[0];
-        this.w = xSize;
-        this.h = ySize;
-        this.color = game.players[game.players.length-1].color;
-        var str = "";
-      }
-      show() {
-        ctx.fillStyle = game.players[game.idTurn].color;
-        console.log(game.players.length + "      and     "  + game.idTurn)
+    function   show(x,y, ind) {
+        // ctx.fillStyle = game.players[ind].color;
+        console.log(game.players[ind].color + game.players[ind].dir)
+        ctx.drawImage(playerImgs[game.players[ind].color + game.players[ind].dir], x * xSize,y * ySize,xSize,ySize);
         
-        ctx.fillRect((game.players[game.idTurn].pos[1]) * xSize, (game.players[game.idTurn].pos[0]) * ySize, xSize, ySize);
-      }
-      update() {
-        grid[this.x][this.y] = "P";
+        // console.log(game.players.length + "      and     "  + game.idTurn)
+        
+        // ctx.fillRect((x) * xSize, (y) * ySize, xSize, ySize);
+      } 
+      function       update(x,y) {
+        grid[x][y] = "P";
         str = "";
         for (let i = 0; i <= size; i++) {
           for (let j = 0; j <= size; j++) {
@@ -140,126 +149,48 @@
         }
         // map.innerHTML = str;
       }
-      move() {
-        if (this.dir == "north" && this.y > 1) {
-          this.y--;
-        }
-        else if (this.dir == "east" && this.x < size) {
-          this.x++;
-        }
-        else if (this.dir == "south" && this.y < size) {
-          this.y++;
-        }
-        else if (this.dir == "west" && this.x > 1) {
-          this.x--;
-        }
-      }
-      clear() {
-        grid[this.x][this.y] = 0;
+      
+      function    clear(x, y) {
+        grid[x][y] = 0;
         ctx.fillStyle = "white";
-        ctx.fillRect(((this.x ) * xSize), ((this.y ) * ySize), this.w, this.h);
+        ctx.fillRect(((x ) * xSize), ((y ) * ySize), xSize, ySize);
         ctx.fillStyle = "black";
         ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
-        ctx.strokeRect((this.x ) * xSize, (this.y ) * ySize, this.w, this.h);
+        ctx.strokeRect((x ) * xSize, (y ) * ySize, xSize, ySize);
       }
-    }
-    // var player = new Player();
-    // var loop = setInterval(draw, 800);
-    var myDir = ["north", "east", "south", "west"];
+      var myDir = ["north", "east", "south", "west"];
 
-    // function draw() {
-  
-    // }
     drawGrid();
-
-    /*
-    var messages = [];
-    var roster = [];
-    var name = '';
-    var text = '';
-
-    socket.on('connect', function () {
-      setName();
-    });
-
-    socket.on('message', function (msg) {
-      messages.push(msg);
-      
-    });
-
-    socket.on('roster', function (names) {
-      roster = names;
-      
-    });
-
-    function send() {
-      console.log('Sending message:', text);
-      socket.emit('message', text);
-      text = '';
-    };
-
-    function setName() {
-      socket.emit('identify', name);
-    };  */
-
-
-
-
-    /*
-    var messages = [];
-    var roster = [];
-    var name = '';
-    var text = '';
-
-    socket.on('connect', function () {
-      setName();
-    });
-
-    socket.on('message', function (msg) {
-      messages.push(msg);
-      
-    });
-
-    socket.on('roster', function (names) {
-      roster = names;
-      
-    });
-
-    function send() {
-      console.log('Sending message:', text);
-      socket.emit('message', text);
-      text = '';
-    };
-
-    function setName() {
-      socket.emit('identify', name);
-    };  */
-    
      socket.on("queue", function(data) {
-// console.log(data);
       game = data;
-player.push(new Player())
-// console.log(players)
-// console.log(game);
-    for (var i = 0; i < player.length; i++) {
-        player[i].clear();
-        // players[i].move();
-        player[i].update();
-        // player.dir = myDir[Math.floor(Math.random() * 4)]
-        // players[i].show();
-      }
+      console.log(game)
+        clear(game.players[game.players.length-1].pos[1],game.players[game.players.length-1].pos[0]);
+        update(game.players[game.players.length-1].pos[1],game.players[game.players.length-1].pos[0]);
+      
     })
 socket.on("draw", function(data){
-  console.log(game)
+  console.log(game.idTurn + " IS THE ID TRURN")
+       for(let i=0;i<game.players.length;i++){
+            clear(game.players[i].pos[1],game.players[i].pos[0]);
+       }
   game = data;
-      for (var i = 0; i < player.length; i++) {
-        player[i].clear();
-        // players[i].move();
-        player[i].update();
-        // player.dir = myDir[Math.floor(Math.random() * 4)]
-        player[i].show();
+  
+  
+      for(let i=0;i<game.players.length;i++){
+            // clear(game.players[i].pos[1],game.players[i].pos[0]);
+            show(game.players[i].pos[1],game.players[i].pos[0], i)
+        
       }
+      
+      
+      
+      
+        // players[i].move();
+        update(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0]);
+        // player.dir = myDir[Math.floor(Math.random() * 4)]
+        // show(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0], game.idTurn);
+      
 })
  
     
