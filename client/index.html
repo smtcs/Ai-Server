@@ -60,6 +60,8 @@
   <!--<script src="/js/bootstrap.min.js"></script>-->
   <!--<script src="/js/angular.min.js"></script>-->
   <script>
+  
+var   barricades = [[2,5],[15,5], [1,5], [3,5], [4,5], [5,5], [5,4], [5,3], [5,2], [5,1], [4,9], [5,9], [6,9], [7,9], [4,10], [5,10], [6,10], [7,10],[1,14], [2,14], [3,14], [4,14], [5,14], [5, 15], [5,16], [5,17], [5,18], [9,16], [9,15], [9,14], [9,13], [10,16], [10,15], [10,14], [10,13], [14,18], [14,17], [14,16], [14,15], [14,14], [15,14], [16,14], [17,14], [18,14], [16,9], [15,9], [14,9], [13,9], [16,10], [15,10], [14,10], [13,10], [18,5], [17,5], [16,5], [14,5], [14,4], [14,3], [14,2], [14,1], [10,3], [10,4], [10,5], [10,6], [9,3], [9,4], [9,5], [9,6] ]
       var socket = io.connect();
   var btn = document.getElementById("create");
 var username = document.getElementById("username");
@@ -101,7 +103,7 @@ socket.emit("newPlayer", {"key": key, "username": username.value})
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d")
     // var map = document.getElementById("map");
-    var size = 10;
+    var size = 20;
     var xSize = canvas.width / size;
     var ySize = canvas.height / size;
     var grid = [];
@@ -128,10 +130,17 @@ socket.emit("newPlayer", {"key": key, "username": username.value})
       }
     }
     function   show(x,y, ind) {
+      for(var i=0;i<barricades.length;i++){
+        ctx.fillStyle = "pink";
+        ctx.fillRect(barricades[i][1] * xSize,barricades[i][0]*ySize,xSize,ySize)
+      }
         // ctx.fillStyle = game.players[ind].color;
-        console.log(game.players[ind].color + game.players[ind].dir)
+        // console.log(game.players[ind].color + game.players[ind].dir)
+        try{
         ctx.drawImage(playerImgs[game.players[ind].color + game.players[ind].dir], x * xSize,y * ySize,xSize,ySize);
-        
+        } catch(err){
+          // location.reload();
+        }
         // console.log(game.players.length + "      and     "  + game.idTurn)
         
         // ctx.fillRect((x) * xSize, (y) * ySize, xSize, ySize);
@@ -156,27 +165,34 @@ socket.emit("newPlayer", {"key": key, "username": username.value})
         ctx.fillRect(((x ) * xSize), ((y ) * ySize), xSize, ySize);
         ctx.fillStyle = "black";
         ctx.strokeStyle = "black";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.strokeRect((x ) * xSize, (y ) * ySize, xSize, ySize);
       }
       var myDir = ["north", "east", "south", "west"];
 
     drawGrid();
      socket.on("queue", function(data) {
-      game = data;
+       ctx.fillStyle = "white";
+       ctx.fillRect(0,0,canvas.width,canvas.height);
+       drawGrid();
+        game = data;
+       if(game.players.length){
+     
       console.log(game)
+      try{
         clear(game.players[game.players.length-1].pos[1],game.players[game.players.length-1].pos[0]);
+      } catch(err){
+        // location.reload();
+      }
         update(game.players[game.players.length-1].pos[1],game.players[game.players.length-1].pos[0]);
-      
+       }
     })
 socket.on("draw", function(data){
-  console.log(game.idTurn + " IS THE ID TRURN")
+  console.log(game)
        for(let i=0;i<game.players.length;i++){
             clear(game.players[i].pos[1],game.players[i].pos[0]);
        }
   game = data;
-  
-  
       for(let i=0;i<game.players.length;i++){
             // clear(game.players[i].pos[1],game.players[i].pos[0]);
             show(game.players[i].pos[1],game.players[i].pos[0], i)
@@ -190,7 +206,7 @@ socket.on("draw", function(data){
         update(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0]);
         // player.dir = myDir[Math.floor(Math.random() * 4)]
         // show(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0], game.idTurn);
-      
+        
 })
  
     
