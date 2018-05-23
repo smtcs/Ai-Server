@@ -25,7 +25,7 @@
 
 <body>
 
-  <canvas id="canvas" width="600px" height="600px"></canvas>
+  <canvas id="canvas" width="600px" height="600px" style = "display: inline-block;"></canvas>
   
   <div style = "display: none;">
   <img src = "imgs/redbackwards.png" id = "rednorth"/>
@@ -52,6 +52,8 @@
   <input id = "username"></input>
 <button id = "create">Create a bot</button>
 <div id = "after"></div>
+<div id = "scoreboard" style = "display: inline-block;">
+  </div>
 </div>
   
   
@@ -60,8 +62,7 @@
   <!--<script src="/js/bootstrap.min.js"></script>-->
   <!--<script src="/js/angular.min.js"></script>-->
   <script>
-  
-var   barricades = [[2,5],[15,5], [1,5], [3,5], [4,5], [5,5], [5,4], [5,3], [5,2], [5,1], [4,9], [5,9], [6,9], [7,9], [4,10], [5,10], [6,10], [7,10],[1,14], [2,14], [3,14], [4,14], [5,14], [5, 15], [5,16], [5,17], [5,18], [9,16], [9,15], [9,14], [9,13], [10,16], [10,15], [10,14], [10,13], [14,18], [14,17], [14,16], [14,15], [14,14], [15,14], [16,14], [17,14], [18,14], [16,9], [15,9], [14,9], [13,9], [16,10], [15,10], [14,10], [13,10], [18,5], [17,5], [16,5], [14,5], [14,4], [14,3], [14,2], [14,1], [10,3], [10,4], [10,5], [10,6], [9,3], [9,4], [9,5], [9,6] ]
+  var barricades= [];
       var socket = io.connect();
   var btn = document.getElementById("create");
 var username = document.getElementById("username");
@@ -159,6 +160,30 @@ socket.emit("newPlayer", {"key": key, "username": username.value})
         // map.innerHTML = str;
       }
       
+      function bases(game){
+        ctx.fillStyle= game.players[game.idTurn].color;
+        
+        ctx.fillRect(game.bases[game.idTurn].pos[1] * xSize,game.bases[game.idTurn].pos[0]*ySize,xSize,ySize);
+        
+  ctx.font = "20px Arial";
+                 
+                  for(var i=0;i<game.bases.length;i++){
+                    ctx.fillStyle = "white"
+                    ctx.fillText(game.bases[i].energy, game.bases[i].pos[1] * xSize, (game.bases[i].pos[0] * ySize) + ySize);
+                  }
+
+        
+      }
+      function nodes(game){
+        for(var i=0;i<game.nodes.length;i++){
+          ctx.fillStyle = "purple";
+          ctx.fillRect(game.nodes[i].pos[1] * xSize,game.nodes[i].pos[0]*ySize,xSize,ySize);
+                  ctx.font = "20px Arial";
+                  ctx.fillStyle = "white"
+ctx.fillText(game.nodes[i].energy,game.nodes[i].pos[1] * xSize,(game.nodes[i].pos[0]*ySize) + ySize);
+        }
+      }
+      
       function    clear(x, y) {
         grid[x][y] = 0;
         ctx.fillStyle = "white";
@@ -172,6 +197,7 @@ socket.emit("newPlayer", {"key": key, "username": username.value})
 
     drawGrid();
      socket.on("queue", function(data) {
+       barricades = data.barricades;
        ctx.fillStyle = "white";
        ctx.fillRect(0,0,canvas.width,canvas.height);
        drawGrid();
@@ -188,11 +214,19 @@ socket.emit("newPlayer", {"key": key, "username": username.value})
        }
     })
 socket.on("draw", function(data){
+ 
   console.log(game)
        for(let i=0;i<game.players.length;i++){
             clear(game.players[i].pos[1],game.players[i].pos[0]);
        }
-  game = data;
+  game=data;
+  
+  // document.getElementById("scoreboard").innerHTML  = "Player1: <br> energy: " + game.players[0].energy + "<br> name: " + game.players[0].name +" <br> Player2:  <br> energy: " +game.players[1].energy + "<br> name: " + game.players[1].name
+  
+  
+           nodes(game);
+          bases(game);
+  
       for(let i=0;i<game.players.length;i++){
             // clear(game.players[i].pos[1],game.players[i].pos[0]);
             show(game.players[i].pos[1],game.players[i].pos[0], i)
@@ -203,11 +237,15 @@ socket.on("draw", function(data){
       
       
         // players[i].move();
-        update(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0]);
+        // update(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0]);
+
+          
         // player.dir = myDir[Math.floor(Math.random() * 4)]
         // show(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0], game.idTurn);
         
 })
+ 
+
  
     
   </script>
