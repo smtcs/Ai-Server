@@ -25,81 +25,99 @@
 
 <body>
 
-  <canvas id="canvas" width="600px" height="600px" style = "display: inline-block;"></canvas>
-  
-  <div style = "display: none;">
-  <img src = "imgs/redbackwards.png" id = "rednorth"/>
-  <img src = "imgs/redforwards.png" id = "redsouth"/>
-  <img src = "imgs/redright.png" id = "redeast"/>
-  <img src = "imgs/redleft.png" id = "redwest"/>
-  
-  <img src = "imgs/bluebackwards.png" id = "bluenorth"/>
-  <img src = "imgs/blueforwards.png" id = "bluesouth"/>
-  <img src = "imgs/blueright.png" id = "blueeast"/>
-  <img src = "imgs/blueleft.png" id = "bluewest"/>
-  
-  <img src = "imgs/greybackwards.png" id = "greynorth"/>
-  <img src = "imgs/greyforwards.png" id = "greysouth"/>
-  <img src = "imgs/greyright.png" id = "greyeast"/>
-  <img src = "imgs/greyleft.png" id = "greywest"/>
-  
-  <img src = "imgs/yellowbackwards.png" id = "yellownorth"/>
-  <img src = "imgs/yellowforwards.png" id = "yellowsouth"/>
-  <img src = "imgs/yellowright.png" id = "yelloweast"/>
-  <img src = "imgs/yellowleft.png" id = "yellowwest"/>
+  <canvas id="canvas" width="600px" height="600px" style="display: inline-block;"></canvas>
+
+  <div style="display: none;">
+    <img src="imgs/redbackwards.png" id="rednorth" />
+    <img src="imgs/redforwards.png" id="redsouth" />
+    <img src="imgs/redright.png" id="redeast" />
+    <img src="imgs/redleft.png" id="redwest" />
+
+    <img src="imgs/bluebackwards.png" id="bluenorth" />
+    <img src="imgs/blueforwards.png" id="bluesouth" />
+    <img src="imgs/blueright.png" id="blueeast" />
+    <img src="imgs/blueleft.png" id="bluewest" />
+
+    <img src="imgs/greybackwards.png" id="greynorth" />
+    <img src="imgs/greyforwards.png" id="greysouth" />
+    <img src="imgs/greyright.png" id="greyeast" />
+    <img src="imgs/greyleft.png" id="greywest" />
+
+    <img src="imgs/yellowbackwards.png" id="yellownorth" />
+    <img src="imgs/yellowforwards.png" id="yellowsouth" />
+    <img src="imgs/yellowright.png" id="yelloweast" />
+    <img src="imgs/yellowleft.png" id="yellowwest" />
   </div>
-  <div style = "float: right;">
-  <input id = "username"></input>
-<button id = "create">Create a bot</button>
-<div id = "after"></div>
-<div id = "scoreboard" style = "display: inline-block;">
+  <div style="float: right;">
+    <input id="username"></input>
+    <button id="create">Create a bot</button>
+    <div id="after"></div>
+    <div id="scoreboard" style="display: inline-block;">
+    </div>
+    <select id = "selectGame">
+  <option value="0">0</option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+    <option value="4">4</option>
+</select>
   </div>
-</div>
-  
-  
+
+
   <script src="/js/jquery.min.js"></script>
 
   <!--<script src="/js/bootstrap.min.js"></script>-->
   <!--<script src="/js/angular.min.js"></script>-->
   <script>
-  var barricades= [];
-      var socket = io.connect();
-  var btn = document.getElementById("create");
-var username = document.getElementById("username");
-var after = document.getElementById("after");
-btn.onclick = function(){
-btn.style.display = "none";
-username.style.display = "none";
-var key = Math.random().toString(36).substr(2, 35);
-after.innerHTML = "Username: " + username.value + "<br>key: " + key;
-socket.emit("newPlayer", {"key": key, "username": username.value})
-}
-
-
-  var playerImgs = {
-    rednorth: document.getElementById("rednorth"),
-    redsouth: document.getElementById("redsouth"),
-    redeast: document.getElementById("redeast"),
-    redwest: document.getElementById("redwest"),
-    bluenorth: document.getElementById("bluenorth"),
-    bluesouth: document.getElementById("bluesouth"),
-    blueeast: document.getElementById("blueeast"),
-    bluewest: document.getElementById("bluewest"),
-    greynorth: document.getElementById("greynorth"),
-    greysouth: document.getElementById("greysouth"),
-    greyeast: document.getElementById("greyeast"),
-    greywest: document.getElementById("greywest"),
-    yellownorth: document.getElementById("yellownorth"),
-    yellowsouth: document.getElementById("yellowsouth"),
-    yelloweast: document.getElementById("yelloweast"),
-    yellowwest: document.getElementById("yellowwest")
+  
+  var gameChange = document.getElementById("selectGame");
+  gameChange.onchange = function(){
+    var strUser = gameChange.options[gameChange.selectedIndex].text;
+  game = games[parseInt(strUser)];
+        ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawGrid();
   }
   
   
+    var barricades = [];
+    var socket = io.connect();
+    var btn = document.getElementById("create");
+    var username = document.getElementById("username");
+    var after = document.getElementById("after");
+    btn.onclick = function() {
+      btn.style.display = "none";
+      username.style.display = "none";
+      var key = Math.random().toString(36).substr(2, 35);
+      after.innerHTML = "Username: " + username.value + "<br>key: " + key;
+      socket.emit("newPlayer", { "key": key, "username": username.value })
+    }
+
+
+    var playerImgs = {
+      rednorth: document.getElementById("rednorth"),
+      redsouth: document.getElementById("redsouth"),
+      redeast: document.getElementById("redeast"),
+      redwest: document.getElementById("redwest"),
+      bluenorth: document.getElementById("bluenorth"),
+      bluesouth: document.getElementById("bluesouth"),
+      blueeast: document.getElementById("blueeast"),
+      bluewest: document.getElementById("bluewest"),
+      greynorth: document.getElementById("greynorth"),
+      greysouth: document.getElementById("greysouth"),
+      greyeast: document.getElementById("greyeast"),
+      greywest: document.getElementById("greywest"),
+      yellownorth: document.getElementById("yellownorth"),
+      yellowsouth: document.getElementById("yellowsouth"),
+      yelloweast: document.getElementById("yelloweast"),
+      yellowwest: document.getElementById("yellowwest")
+    }
+
+
 
     socket.emit("display");
     var game;
-   
+
 
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d")
@@ -130,124 +148,136 @@ socket.emit("newPlayer", {"key": key, "username": username.value})
         ctx.stroke();
       }
     }
-    function   show(x,y, ind) {
-      for(var i=0;i<barricades.length;i++){
+
+    function show(x, y, ind) {
+      for (var i = 0; i < game.barricades.length; i++) {
         ctx.fillStyle = "pink";
-        ctx.fillRect(barricades[i][1] * xSize,barricades[i][0]*ySize,xSize,ySize)
+        ctx.fillRect(game.barricades[i][1] * xSize, game.barricades[i][0] * ySize, xSize, ySize)
       }
-        // ctx.fillStyle = game.players[ind].color;
-        // console.log(game.players[ind].color + game.players[ind].dir)
-        try{
-        ctx.drawImage(playerImgs[game.players[ind].color + game.players[ind].dir], x * xSize,y * ySize,xSize,ySize);
-        } catch(err){
-          // location.reload();
-        }
-        // console.log(game.players.length + "      and     "  + game.idTurn)
-        
-        // ctx.fillRect((x) * xSize, (y) * ySize, xSize, ySize);
-      } 
-      function       update(x,y) {
-        grid[x][y] = "P";
-        str = "";
-        for (let i = 0; i <= size; i++) {
-          for (let j = 0; j <= size; j++) {
-            str += grid[j][i] + " "
-            if (j % (size) == 0) {
-              str += "\n<br>"
-            }
-          }
-        }
-        // map.innerHTML = str;
+      // ctx.fillStyle = game.players[ind].color;
+      // console.log(game.players[ind].color + game.players[ind].dir)
+      try {
+        ctx.drawImage(playerImgs[game.players[ind].color + game.players[ind].dir], x * xSize, y * ySize, xSize, ySize);
       }
-      
-      function bases(game){
-        ctx.fillStyle= game.players[game.idTurn].color;
-        
-        ctx.fillRect(game.bases[game.idTurn].pos[1] * xSize,game.bases[game.idTurn].pos[0]*ySize,xSize,ySize);
-        
-  ctx.font = "20px Arial";
-                 
-                  for(var i=0;i<game.bases.length;i++){
-                    ctx.fillStyle = "white"
-                    ctx.fillText(game.bases[i].energy, game.bases[i].pos[1] * xSize, (game.bases[i].pos[0] * ySize) + ySize);
-                  }
-
-        
-      }
-      function nodes(game){
-        for(var i=0;i<game.nodes.length;i++){
-          ctx.fillStyle = "purple";
-          ctx.fillRect(game.nodes[i].pos[1] * xSize,game.nodes[i].pos[0]*ySize,xSize,ySize);
-                  ctx.font = "20px Arial";
-                  ctx.fillStyle = "white"
-ctx.fillText(game.nodes[i].energy,game.nodes[i].pos[1] * xSize,(game.nodes[i].pos[0]*ySize) + ySize);
-        }
-      }
-      
-      function    clear(x, y) {
-        grid[x][y] = 0;
-        ctx.fillStyle = "white";
-        ctx.fillRect(((x ) * xSize), ((y ) * ySize), xSize, ySize);
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect((x ) * xSize, (y ) * ySize, xSize, ySize);
-      }
-      var myDir = ["north", "east", "south", "west"];
-
-    drawGrid();
-     socket.on("queue", function(data) {
-       barricades = data.barricades;
-       ctx.fillStyle = "white";
-       ctx.fillRect(0,0,canvas.width,canvas.height);
-       drawGrid();
-        game = data;
-       if(game.players.length){
-     
-      console.log(game)
-      try{
-        clear(game.players[game.players.length-1].pos[1],game.players[game.players.length-1].pos[0]);
-      } catch(err){
+      catch (err) {
         // location.reload();
       }
-        update(game.players[game.players.length-1].pos[1],game.players[game.players.length-1].pos[0]);
-       }
-    })
-socket.on("draw", function(data){
- 
-  console.log(game)
-       for(let i=0;i<game.players.length;i++){
-            clear(game.players[i].pos[1],game.players[i].pos[0]);
-       }
-  game=data;
-  
-  // document.getElementById("scoreboard").innerHTML  = "Player1: <br> energy: " + game.players[0].energy + "<br> name: " + game.players[0].name +" <br> Player2:  <br> energy: " +game.players[1].energy + "<br> name: " + game.players[1].name
-  
-  
-           nodes(game);
-          bases(game);
-  
-      for(let i=0;i<game.players.length;i++){
-            // clear(game.players[i].pos[1],game.players[i].pos[0]);
-            show(game.players[i].pos[1],game.players[i].pos[0], i)
-        
+      // console.log(game.players.length + "      and     "  + game.idTurn)
+
+      // ctx.fillRect((x) * xSize, (y) * ySize, xSize, ySize);
+    }
+
+    function update(x, y) {
+      grid[x][y] = "P";
+      str = "";
+      for (let i = 0; i <= size; i++) {
+        for (let j = 0; j <= size; j++) {
+          str += grid[j][i] + " "
+          if (j % (size) == 0) {
+            str += "\n<br>"
+          }
+        }
       }
-      
-      
-      
-      
-        // players[i].move();
-        // update(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0]);
+      // map.innerHTML = str;
+    }
 
-          
-        // player.dir = myDir[Math.floor(Math.random() * 4)]
-        // show(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0], game.idTurn);
-        
-})
- 
+    function bases(game) {
+      ctx.fillStyle = game.players[game.idTurn].color;
 
- 
+      ctx.fillRect(game.bases[game.idTurn].pos[0] * xSize, game.bases[game.idTurn].pos[1] * ySize, xSize, ySize);
+
+      ctx.font = "20px Arial";
+
+      for (var i = 0; i < game.bases.length; i++) {
+        ctx.fillStyle = "white"
+        ctx.fillText(game.bases[i].energy, game.bases[i].pos[0] * xSize, (game.bases[i].pos[1] * ySize) + ySize);
+      }
+
+
+    }
+
+    function nodes(game) {
+      for (var i = 0; i < game.nodes.length; i++) {
+        ctx.fillStyle = "purple";
+        ctx.fillRect(game.nodes[i].pos[0] * xSize, game.nodes[i].pos[1] * ySize, xSize, ySize);
+        ctx.font = "20px Arial";
+        ctx.fillStyle = "white"
+        ctx.fillText(game.nodes[i].energy, game.nodes[i].pos[0] * xSize, (game.nodes[i].pos[1] * ySize) + ySize);
+      }
+    }
+
+    function clear(x, y) {
+      console.log(x + "    add  " + y)
+      grid[x][y] = 0;
+      ctx.fillStyle = "white";
+      ctx.fillRect(((x) * xSize), ((y) * ySize), xSize, ySize);
+      ctx.fillStyle = "black";
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect((x) * xSize, (y) * ySize, xSize, ySize);
+    }
+    var myDir = ["north", "east", "south", "west"];
+var games;
+    drawGrid();
+    socket.on("queue", function(data) {
+      games = data;
+      // barricades = data.barricades;
+      for(var i=0;i<data.length;i++){
+        if(data[i].running){
+            game = data[i];
+            break;
+        }
+      }
     
+      // if(game.players.length){
+
+      // console.log(game)
+      // try{
+      // clear(game.players[game.idTurn].pos[0],game.players[game.idTurn].pos[1]);
+      // } catch(err){
+      // location.reload();
+      // }
+      // update(game.players[game.players.length-1].pos[0],game.players[game.players.length-1].pos[1]);
+      // }
+    })
+    socket.on("draw", function(data) {
+
+      // console.log(game)
+      for (let i = 0; i < game.players.length; i++) {
+        // console.log(game.players[i])
+        clear(game.players[i].pos[0], game.players[i].pos[1]);
+      }
+      for(let i=0;i<data.length;i++){
+    if(data[i].running){
+      game = data[i];
+      break;
+    }
+      }
+      document.getElementById("scoreboard").innerHTML = "";
+      for (var i = 0; i < game.players.length; i++) {
+        document.getElementById("scoreboard").innerHTML += "Player" + i + ": <br> energy: " + game.players[i].energy + "<br> name: " + game.players[i].name + "<br> base energy: " + game.bases[i].energy + "<br> <br> <br> ";
+      }
+
+      nodes(game);
+      bases(game);
+
+      for (let i = 0; i < game.players.length; i++) {
+        // clear(game.players[i].pos[1],game.players[i].pos[0]);
+        show(game.players[i].pos[0], game.players[i].pos[1], i)
+
+      }
+
+
+
+
+      // players[i].move();
+      // update(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0]);
+
+
+      // player.dir = myDir[Math.floor(Math.random() * 4)]
+      // show(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0], game.idTurn);
+
+    })
   </script>
 </body>
 
