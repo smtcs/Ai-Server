@@ -22,7 +22,7 @@ var socketio = require('socket.io');
 var express = require('express');
 var app = express();
 
-const PLAYER_NUMBER = 1;
+const PLAYER_NUMBER = 3;
 
 var games = [];
 var queueSockets = [];
@@ -63,12 +63,11 @@ const posses = [
   [18, 18],
   [1, 18]
 ];
-var colors = ["red", "blue", "green", "yellow"];
+var colors = ["red", "blue", "yellow", "grey"];
 var tempName = "";
 
 class Player {
   constructor(name, count) {
-    // console.log(sockets.length)
     this.id = count;
     this.color = colors[count]
     this.name = name;
@@ -76,8 +75,6 @@ class Player {
     this.pos = [];
     this.pos.push(posses[count][0]);
     this.pos.push(posses[count][1]);
-    // c
-    // console.log("NEW PLAYER!!!!!! " + posses[this.id - 1] + "    tf ? " + this.id)
     this.dir = "";
   }
 }
@@ -90,7 +87,7 @@ class Player {
 
 let maps = [{
   nodes: [{ pos: [4, 4], energy: 0 }, { pos: [15, 4], energy: 0 }, { pos: [15, 15], energy: 0 }, { pos: [4, 15], energy: 0 }, { pos: [8, 8], energy: 0 }, { pos: [11, 8], energy: 0 }, { pos: [8, 11], energy: 0 }, { pos: [11, 11], energy: 0 }],
-  bases: [{ pos: [1, 1], energy: 0 }, { pos: [18, 1], energy: 0 }, { pos: [18, 18], energy: 0 }, { pos: [1, 18], energy: 0 }],
+  bases: [{ pos: [1, 1], energy: 0, id:0 }, { pos: [18, 1], energy: 0,id:1 }, { pos: [18, 18], energy: 0,id:2 }, { pos: [1, 18], energy: 0,id:3 }],
   barricades: [
     [5, 2],
     [5, 15],
@@ -161,7 +158,7 @@ let maps = [{
     [5, 9],
     [6, 9]
   ]
-}]
+}, {barricades: [[8,13],[9,13],[10,13],[11,13],[6,11],[6,10],[6,9],[6,8],[8,6],[9,6],[10,6],[11,6],[13,8],[13,9],[13,10],[13,11],[10,12],[9,12],[7,10],[7,9],[9,7],[10,7],[12,9],[12,10],[14,7],[14,8],[14,9],[14,10],[14,11],[14,12],[12,14],[11,14],[10,14],[9,14],[8,14],[7,14],[5,12],[5,11],[5,10],[5,9],[5,8],[5,7],[7,5],[8,5],[9,5],[10,5],[11,5],[12,5],[7,19],[7,18],[7,17],[8,17],[11,17],[12,17],[12,18],[12,19],[7,0],[7,1],[7,2],[8,2],[11,2],[12,2],[12,1],[12,0],[17,8],[17,7],[18,7],[19,7],[17,11],[17,12],[18,12],[19,12],[2,12],[1,12],[0,12],[2,11],[2,8],[2,7],[1,7],[0,7]],   bases: [{ pos: [1, 1], energy: 0, id:0 }, { pos: [18, 1], energy: 0,id:1 }, { pos: [18, 18], energy: 0,id:2 }, { pos: [1, 18], energy: 0,id:3 }], nodes: [{ pos: [9,0], energy: 0 },{ pos: [10, 0], energy: 0}, { pos: [9, 19], energy: 0 },{ pos: [10, 19], energy: 0 }, { pos: [0, 9], energy: 0 },{ pos: [0, 10], energy: 0 }, { pos: [19, 9], energy: 0 }, { pos: [19, 10], energy: 0 }, { pos: [9, 9], energy: 0 }, { pos: [9, 10], energy: 0 }, { pos: [10, 10], energy: 0 }, { pos: [10, 9], energy: 0 }    ]}];
 
 function Game(gameId) {
   this.running = false;
@@ -171,12 +168,15 @@ function Game(gameId) {
   this.idTurn = 0;
   this.turn = 0;
   this.socketIndex;
-  let mapNum = Math.floor(Math.random() * maps.length)
+  let mapNum = Math.floor(Math.random() * maps.length);
   this.bases = (JSON.parse(JSON.stringify(maps[mapNum].bases)));
   this.barricades = (JSON.parse(JSON.stringify(maps[mapNum].barricades)));
   this.nodes = JSON.parse(JSON.stringify(maps[mapNum].nodes));
 }
 
+games.push(new Game(games.length));
+games.push(new Game(games.length));
+games.push(new Game(games.length));
 games.push(new Game(games.length));
 games.push(new Game(games.length));
 // TODO : Remove once set to use Arrays
@@ -213,6 +213,9 @@ io.on('connection', function(socket) {
      */
 
     socket.on("new direction", function(data) {
+      
+      
+      
 
 
 
@@ -228,16 +231,18 @@ io.on('connection', function(socket) {
           games[data.gameId].players[data.id].pos[1]++;
         }
         else if (data.dir == "west" && games[data.gameId].players[data.id].pos[0] > 0 && checkCollide(games[data.gameId].players[data.id].pos[0] - 1, games[data.gameId].players[data.id].pos[1], games[data.gameId])) {
-          console.log("moving west");
+          // console.log("moving west");
           games[data.gameId].players[data.id].pos[0]--;
         }
         else {
-          console.log("No Direction Given?")
+          console.log("No Direction Given? " + data.dir)
         }
         games[data.gameId].players[game.idTurn].dir = data.dir;
 
 
       }
+      
+     
       // console.log(game.players[0].pos)
       // console.log(game.players[1].pos)
     });
@@ -265,7 +270,7 @@ io.on('connection', function(socket) {
         }
       }
       else {
-        console.log("failleddddd")
+        // console.log("failleddddd")
       }
 
 
@@ -307,32 +312,39 @@ server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function() 
   console.log("Chat server listening at", addr.address + ":" + addr.port);
 });
 
-
 function resetGame(gameToReset) {
-  console.log("GAME LENGTH " + gameToReset.players.length)
+  var energyArr = [];
+  var winner = gameToReset.bases[0];
+  for(var i=0;i<gameToReset.bases.length;i++){
+    if(winner.energy < gameToReset.bases[i].energy){
+      winner = gameToReset.bases[i];
+    }
+energyArr.push(gameToReset.bases[i].energy)
+   }
+   energyArr = energyArr.sort();
+   console.log("ENERGYARR", energyArr)
+   if(energyArr[energyArr.length-1] != energyArr[energyArr.length-2]){
+     broadcast("endGame", {"winner":gameToReset.players[winner.id], "base": winner, "gameId": gameToReset.gameId}, sockets[gameToReset.gameId])
+     broadcast("endGame", {"winner": gameToReset.players[winner.id], "base": winner, "gameId": gameToReset.gameId}, displays)
+    addWin(gameToReset.players[winner.id].name)
+   } else{
+     console.log("WINR",gameToReset.players[winner.id])
+        broadcast("endGame", {"winner": "tie", "gameId": gameToReset.gameId}, sockets[gameToReset.gameId])
+     broadcast("endGame", {"winner": "tie", "gameId": gameToReset.gameId}, displays)
+   }
+  
   gameToReset.players.length = 0;
-  sockets[games.indexOf(gameToReset)].length = 0;
+  sockets[gameToReset.gameId].length = 0;
 
-
-
-  games[games.indexOf(gameToReset)] = new Game();
-
-  // TODO: remove this once games is Array based
-  // game = games[0];
-
-
-  console.log("GAME LENGTH " + gameToReset.players.length)
+  games[gameToReset.gameId] = new Game(games.length);
   if (queueSockets.length >= PLAYER_NUMBER) {
     startGame(queueSockets)
-    console.log("GAME LENGTH " + gameToReset.players.length)
   }
   else {
     gameToReset.running = false;
     console.log("GAME LENGTH " + gameToReset.players.length)
   }
-
   console.log("end of reset", gameToReset.players[0]);
-  // broadcast("gameOver");
 }
 
 function startGame(queued) {
@@ -351,7 +363,6 @@ function startGame(queued) {
 
   for (var i = 0; i < PLAYER_NUMBER; i++) {
     var oi = queued.shift();
-    // games[ind].sockets.push(oi);
     sockets[ind].push(oi);
     console.log(oi.playerName)
     games[ind].players.push(new Player(oi.playerName, games[ind].players.length));
@@ -381,7 +392,7 @@ function startGame(queued) {
   //   games[ind].players.push(new Player(oi.playerName, games[ind].players.length));
   //   console.log(games[ind].players)
   //   // console.log(queued)
-  // }
+  // } // Im gonna add wins and all of that good stuff
   console.log("someone connected");
   broadcast("queue", "There are " + games[ind].players.length + " people connencted.", sockets[ind]);
   broadcast("queue", games, displays);
@@ -392,10 +403,11 @@ function startGame(queued) {
   // game.players[i].pos = posses[i]
   // }
 
+
   console.log("before loop starts", games[ind].players[0]);
   var loop = setInterval(function() {
     // console.log("LOOPING" + games[ind].players.length + " should be above zero, algong with " + sockets.length + ", but " + queueSockets.length + " should be zero.")
-    if (games[ind].turn > 200) {
+    if (games[ind].turn >= 200) {
       clearInterval(loop)
       resetGame(games[ind])
     }
@@ -403,6 +415,7 @@ function startGame(queued) {
 
       games[ind].turn++;
       game.idTurn = games[ind].turn % games[ind].players.length;
+      console.log("GAMEID " + game.idTurn)
       for (var i = 0; i < game.players.length; i++) {
 
         games[ind].players[i].x = games[ind].players[i].pos[0];
@@ -410,6 +423,11 @@ function startGame(queued) {
         // if(game.players.pos)
         for (let j = 0; j < game.players.length; j++) {
           if (j != i) {
+                    if (games[ind].players[j].pos[1] == games[ind].bases[i].pos[1] && games[ind].players[j].pos[0] == games[ind].bases[i].pos[0]) {
+          games[ind].players[j].energy += games[ind].bases[i].energy
+         games[ind].bases[i].energy= 0;
+        }
+            
 
 
             if (games[ind].players[i].pos[1] == games[ind].players[j].pos[1] && game.players[i].pos[0] == game.players[j].pos[0]) {
@@ -426,9 +444,13 @@ function startGame(queued) {
 
 
         }
+        
+        
         if (games[ind].players[i].pos[1] == games[ind].bases[i].pos[1] && games[ind].players[i].pos[0] == games[ind].bases[i].pos[0]) {
           games[ind].bases[i].energy += games[ind].players[i].energy
           games[ind].players[i].energy = 0;
+        } else {
+          console.log(games[ind].players[i].pos + " BASE POS " + games[ind].bases[i].pos)
         }
 
       }
@@ -442,7 +464,6 @@ function startGame(queued) {
           // console.log(game.nodes[i])
         }
       }
-      console.log("LINE431 ")
 
       for (var i = 0; i < games[ind].nodes.length; i++) {
         if (games[ind].players[games[ind].idTurn].pos[1] == games[ind].nodes[i].pos[1] && games[ind].players[games[ind].idTurn].pos[0] == games[ind].nodes[i].pos[0]) {
@@ -450,28 +471,37 @@ function startGame(queued) {
           games[ind].nodes[i].energy = 0;
         }
       }
-
-      console.log("got to broadcast space")
-
+console.log(sockets[ind].length)
+games[ind].idTurn = games[ind].turn % games[ind].players.length
       broadcast("draw", games, displays);
-      console.log(games[ind])
+      console.log("SCOKETs" + sockets)
       sockets[ind][games[ind].idTurn].emit("update", games[ind]);
+      console.log("EMMITING TO " + games[ind].idTurn + " ")
 
-      console.log("ewew")
     }
-  }, 200)
+    
+  }, 120)
 }
+
+function addWin(userName){
+for(let thing in data){
+  if(data[thing].username == userName){
+    data[thing].wins++;
+    break;
+  }
+}
+
+    fs.writeFileSync("database.json", JSON.stringify(data, null, 2))
+}
+
+
 
 function checkKey(key) {
   let arr = Object.keys(data)
-  // console.log(arr)
   for (let i = 0; i < arr.length; i++) {
     if (key == arr[i]) {
       // tempName = temp[key].username;
       return data[key].username;
-    }
-    else {
-      console.log(data[arr[i]].username + "     is     ")
     }
   }
   return false;
@@ -482,7 +512,7 @@ function checkKey(key) {
 function checkCollide(x, y, game) {
   for (var i = 0; i < game.barricades.length; i++) {
     if (game.barricades[i][0] == x && game.barricades[i][1] == y) {
-      return false;
+      return false;   
     }
   }
   return true;

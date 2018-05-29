@@ -54,12 +54,12 @@
     <div id="after"></div>
     <div id="scoreboard" style="display: inline-block;">
     </div>
-    <select id = "selectGame">
+    <select id="selectGame">
   <option value="0">0</option>
-  <option value="1">1</option>
-  <option value="2">2</option>
-  <option value="3">3</option>
-    <option value="4">4</option>
+  <option value="1">2</option>
+  <option value="2">3</option>
+  <option value="3">4</option>
+    <option value="4">5</option>
 </select>
   </div>
 
@@ -69,17 +69,7 @@
   <!--<script src="/js/bootstrap.min.js"></script>-->
   <!--<script src="/js/angular.min.js"></script>-->
   <script>
-  
-  var gameChange = document.getElementById("selectGame");
-  gameChange.onchange = function(){
-    var strUser = gameChange.options[gameChange.selectedIndex].text;
-  game = games[parseInt(strUser)];
-        ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      drawGrid();
-  }
-  
-  
+  var lastCoords;
     var barricades = [];
     var socket = io.connect();
     var btn = document.getElementById("create");
@@ -149,20 +139,27 @@
       }
     }
 
-    function show(x, y, ind) {
-      for (var i = 0; i < game.barricades.length; i++) {
+    function show(gameToDraw) {
+
+      for (var i = 0; i < gameToDraw.barricades.length; i++) {
         ctx.fillStyle = "pink";
-        ctx.fillRect(game.barricades[i][1] * xSize, game.barricades[i][0] * ySize, xSize, ySize)
+        ctx.fillRect(gameToDraw.barricades[i][1] * xSize, gameToDraw.barricades[i][0] * ySize, xSize, ySize)
       }
       // ctx.fillStyle = game.players[ind].color;
       // console.log(game.players[ind].color + game.players[ind].dir)
-      try {
-        ctx.drawImage(playerImgs[game.players[ind].color + game.players[ind].dir], x * xSize, y * ySize, xSize, ySize);
-      }
-      catch (err) {
-        // location.reload();
-      }
-      // console.log(game.players.length + "      and     "  + game.idTurn)
+for(let i=0;i<gameToDraw.players.length;i++) {
+  if(!(gameToDraw.players[i].dir== "south" || gameToDraw.players[i].dir== "north" ||gameToDraw.players[i].dir== "east" || gameToDraw.players[i].dir== "west"  )){
+    gameToDraw.players[i].dir = "south";
+  }
+  try{
+        ctx.drawImage(playerImgs[gameToDraw.players[i].color + gameToDraw.players[i].dir], gameToDraw.players[i].pos[0] * xSize, gameToDraw.players[i].pos[1] * ySize, xSize, ySize);
+} catch(err){
+  console.log("ERROR    " + gameToDraw.players[i].color + gameToDraw.players[i].dir)
+}
+    
+  }
+
+  console.log(game.players.length + "      and     "  + game.idTurn)
 
       // ctx.fillRect((x) * xSize, (y) * ySize, xSize, ySize);
     }
@@ -207,7 +204,7 @@
     }
 
     function clear(x, y) {
-      console.log(x + "    add  " + y)
+      console.log("clearing", x, y);
       grid[x][y] = 0;
       ctx.fillStyle = "white";
       ctx.fillRect(((x) * xSize), ((y) * ySize), xSize, ySize);
@@ -217,18 +214,23 @@
       ctx.strokeRect((x) * xSize, (y) * ySize, xSize, ySize);
     }
     var myDir = ["north", "east", "south", "west"];
-var games;
+    var games;
     drawGrid();
     socket.on("queue", function(data) {
       games = data;
       // barricades = data.barricades;
-      for(var i=0;i<data.length;i++){
-        if(data[i].running){
-            game = data[i];
-            break;
+      
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].running) {
+             ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawGrid();
+          game = data[i];
+          break;
         }
+        
       }
-    
+
       // if(game.players.length){
 
       // console.log(game)
@@ -240,36 +242,53 @@ var games;
       // update(game.players[game.players.length-1].pos[0],game.players[game.players.length-1].pos[1]);
       // }
     })
+
+   socket.on("endGame", function(obj){
+     if(games[parseInt(selectGame.options[selectGame.selectedIndex].value)].gameId == obj.gameId ){
+   if(obj.winner == "tie"){
+    // alert("Tie! Nobody wins ;-;");
+   } else{
+    // alert("Yay! Congrats to " + obj.winner.name + " who won with an astounding energy score of " + obj.base.energy + "!");
+     
+   }
+     }
+   })
     socket.on("draw", function(data) {
+ let gameToDraw = data[parseInt(selectGame.options[selectGame.selectedIndex].value)];
 
-      // console.log(game)
-      for (let i = 0; i < game.players.length; i++) {
-        // console.log(game.players[i])
-        clear(game.players[i].pos[0], game.players[i].pos[1]);
+
+if(lastCoords != null){
+  for (let i = 0; i < gameToDraw.players.length; i++) {
+          // console.log(gameToDraw.players[i])
+          clear(lastCoords.players[i].pos[0], lastCoords.players[i].pos[1]);
+        
+        }
+}
+
+
+
+lastCoords = gameToDraw;
+// alert(parseInt(selectGame.options[selectGame.selectedIndex]))
+     
+
+      if (gameToDraw.running) {
+      
+        document.getElementById("scoreboard").innerHTML = "";
+        for (var i = 0; i < gameToDraw.players.length; i++) {
+          document.getElementById("scoreboard").innerHTML += "Player" + i + ": <br> energy: " + gameToDraw.players[i].energy + "<br> name: " + gameToDraw.players[i].name + "<br> base energy: " + gameToDraw.bases[i].energy + "<br> <br> <br> ";
+        }
+        nodes(gameToDraw);
+        bases(gameToDraw);
+     
+          // clear(gameToDraw.players[i].pos[1],gameToDraw.players[i].pos[0]);
+          show(gameToDraw)
+          
+        }
+      
+      //TODO: fix this to do something when a game stops running or isnt' running and is selected
+      else{
+        
       }
-      for(let i=0;i<data.length;i++){
-    if(data[i].running){
-      game = data[i];
-      break;
-    }
-      }
-      document.getElementById("scoreboard").innerHTML = "";
-      for (var i = 0; i < game.players.length; i++) {
-        document.getElementById("scoreboard").innerHTML += "Player" + i + ": <br> energy: " + game.players[i].energy + "<br> name: " + game.players[i].name + "<br> base energy: " + game.bases[i].energy + "<br> <br> <br> ";
-      }
-
-      nodes(game);
-      bases(game);
-
-      for (let i = 0; i < game.players.length; i++) {
-        // clear(game.players[i].pos[1],game.players[i].pos[0]);
-        show(game.players[i].pos[0], game.players[i].pos[1], i)
-
-      }
-
-
-
-
       // players[i].move();
       // update(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0]);
 
@@ -278,6 +297,13 @@ var games;
       // show(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0], game.idTurn);
 
     })
+
+    var selectGame = document.getElementById("selectGame");
+    selectGame.onchange = function() {
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawGrid();
+    }
   </script>
 </body>
 
