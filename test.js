@@ -94,10 +94,7 @@ let maps = [{
 }, {barricades: [[8,13],[9,13],[10,13],[11,13],[6,11],[6,10],[6,9],[6,8],[8,6],[9,6],[10,6],[11,6],[13,8],[13,9],[13,10],[13,11],[10,12],[9,12],[7,10],[7,9],[9,7],[10,7],[12,9],[12,10],[14,7],[14,8],[14,9],[14,10],[14,11],[14,12],[12,14],[11,14],[10,14],[9,14],[8,14],[7,14],[5,12],[5,11],[5,10],[5,9],[5,8],[5,7],[7,5],[8,5],[9,5],[10,5],[11,5],[12,5],[7,19],[7,18],[7,17],[8,17],[11,17],[12,17],[12,18],[12,19],[7,0],[7,1],[7,2],[8,2],[11,2],[12,2],[12,1],[12,0],[17,8],[17,7],[18,7],[19,7],[17,11],[17,12],[18,12],[19,12],[2,12],[1,12],[0,12],[2,11],[2,8],[2,7],[1,7],[0,7]], 
  bases: [{ pos: [1, 1], energy: 0, id:0 }, { pos: [18, 1], energy: 0,id:1 }, { pos: [18, 18], energy: 0,id:2 }, { pos: [1, 18], energy: 0,id:3 }], nodes: [{ pos: [9,0], energy: 0 },{ pos: [10, 0], energy: 0}, { pos: [9, 19], energy: 0 },{ pos: [10, 19], energy: 0 }, { pos: [0, 9], energy: 0 },{ pos: [0, 10], energy: 0 }, { pos: [19, 9], energy: 0 }, { pos: [19, 10], energy: 0 }, { pos: [9, 9], energy: 0 }, { pos: [9, 10], energy: 0 }, { pos: [10, 10], energy: 0 }, { pos: [10, 9], energy: 0 }    ]}, 
  {barricades: [[0,17],[1,17],[2,17],[3,17],[4,17],[5,17],[6,17],[7,17],[8,17],[11,17],[12,17],[13,17],[14,17],[15,17],[16,17],[17,17],[18,17],[19,17],[8,16],[8,15],[8,14],[9,14],[10,14],[11,14],[12,14],[13,14],[14,14],[15,14],[16,14],[19,16],[19,15],[19,14],[19,13],[19,12],[19,11],[19,10],[19,2],[18,2],[17,2],[16,2],[15,2],[14,2],[13,2],[12,2],[11,2],[8,2],[7,2],[6,2],[5,2],[4,2],[3,2],[2,2],[1,2],[0,2],[11,3],[11,4],[11,5],[10,5],[9,5],[8,5],[7,5],[6,5],[5,5],[4,5],[3,5],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],[0,9],[19,9],[19,8],[19,7],[19,6],[19,5],[19,4],[19,3],[0,10],[0,11],[0,12],[0,13],[0,14],[0,15],[0,16],[16,13],[16,12],[16,11],[16,10],[16,9],[16,8],[16,7],[16,6],[16,5],[3,6],[3,7],[3,8],[3,9],[3,10],[3,11],[3,12],[3,13],[3,14],[15,5],[14,5],[4,14],[5,14]], 
- nodes:[{energy: 0, pos: [9,0]},{energy: 0, pos: [10,0]},{energy: 0, pos: [9,19]},{energy: 0, pos: [10,19]},{energy: 0, pos: [6,9]},{energy: 0, pos: [6,10]},{energy: 0, pos: [13,9]},{energy: 0, pos: [13,10]},{energy: 0, pos: [9,6]},{energy: 0, pos: [10,6]},{energy: 0, pos: [9,13]},{energy: 0, pos: [10,13]}]  , bases: [{ pos: [1, 1], energy: 0, id:0 }, { pos: [18, 1], energy: 0,id:1 }, { pos: [18, 18], energy: 0,id:2 }, { pos: [1, 18], energy: 0,id:3 }]   },  
- {barricades: [[7,12],[12,12],[12,7],[7,7],[2,0],[3,0],[3,1],[4,2],[5,2],[6,1],[6,0],[7,0],[12,0],[13,0],[13,1],[14,2],[15,2],[16,1],[16,0],[17,0],[0,2],[0,3],[1,3],[2,4],[2,5],[1,6],[0,6],[0,7],[8,3],[7,4],[7,5],[8,6],[11,3],[12,4],[12,5],[11,6],[19,2],[19,3],[18,3],[17,4],[17,5],[18,6],[19,6],[19,7],[3,8],[4,7],[5,7],[6,8],[13,8],[14,7],[15,7],[16,8],[3,11],[4,12],[5,12],[6,11],[8,13],[11,13],[13,11],[14,12],[15,12],[16,11],[0,12],[0,13],[1,13],[2,14],[2,15],[1,16],[0,16],[0,17],[19,12],[19,13],[18,13],[17,14],[17,15],[18,16],[19,16],[19,17],[7,14],[7,15],[8,16],[11,16],[12,15],[12,14],[2,19],[3,19],[3,18],[4,17],[5,17],[6,18],[6,19],[7,19],[12,19],[13,19],[13,18],[14,17],[15,17],[16,18],[16,19],[17,19],[4,0],[4,1],[5,1],[5,0],[14,1],[15,1],[15,0],[14,0],[19,4],[18,4],[18,5],[19,5],[18,15],[19,15],[19,14],[18,14],[14,19],[15,19],[15,18],[14,18],[4,18],[4,19],[5,19],[5,18],[1,14],[0,14],[0,15],[1,15],[1,4],[0,4],[0,5],[1,5],],
- bases: [{ pos: [1, 1], energy: 0, id:0 }, { pos: [18, 1], energy: 0,id:1 }, { pos: [18, 18], energy: 0,id:2 }, { pos: [1, 18], energy: 0,id:3 }],
- nodes:[{energy: 0, pos: [8,4]}, {energy: 0, pos: [8,5]}, {energy: 0, pos: [11,4]},{energy: 0, pos: [11,5]},{energy: 0, pos: [4,8]},{energy: 0, pos: [5,8]},{energy: 0, pos: [4,11]},{energy: 0, pos: [5,11]},{energy: 0, pos: [14,8]},{energy: 0, pos: [15,8]},{energy: 0, pos: [14,11]},{energy: 0, pos: [15,11]},{energy: 0, pos: [8,14]},{energy: 0, pos: [8,15]},{energy: 0, pos: [11,14]},{energy: 0, pos: [11,15]}, {energy: 0, pos: [8,8]},{energy: 0, pos: [11,8]},{energy: 0, pos: [8,11]},{energy: 0, pos: [11,11]}]}]
+ nodes:[{ pos: [0, 9], energy: 0 },{ pos: [0,10], energy: 0 }, { pos: [19, 9], energy: 0 },{ pos: [19,10], energy: 0 },{pos: [9,6], energy:0},{pos:[10,6], energy:0},{pos:[9,15], energy:0}, {pos:[10,15], energy:0},{pos: [15,11], energy:0},{pos:[15,12], energy:0},{ pos:[4,11], energy:0},{pos:[4,12], energy:0}, {pos:[8,11], energy:0},{pos:[8,12], energy:0},{pos:[11,11], energy:0},{pos:[11,12], energy:0} ], bases: [{ pos: [1, 1], energy: 0, id:0 }, { pos: [18, 1], energy: 0,id:1 }, { pos: [18, 18], energy: 0,id:2 }, { pos: [1, 18], energy: 0,id:3 }]   }]
 
 
 function Game(gameId) {
@@ -108,8 +105,9 @@ function Game(gameId) {
   this.idTurn = 0;
   this.turn = 0;
   this.socketIndex;
-  let mapNum = Math.floor(Math.random() * maps.length);
+  let mapNum = Math.floor(Math.random() * 1);
   // mapNum = 2;
+
   this.bases = (JSON.parse(JSON.stringify(maps[mapNum].bases)));
   this.barricades = (JSON.parse(JSON.stringify(maps[mapNum].barricades)));
   this.nodes = JSON.parse(JSON.stringify(maps[mapNum].nodes));
@@ -154,11 +152,6 @@ io.on('connection', function(socket) {
      */
 
     socket.on("new direction", function(data) {
-      
-      
-      
-
-
 
       if (data.id == games[data.gameId].idTurn) {
 
@@ -176,21 +169,19 @@ io.on('connection', function(socket) {
           games[data.gameId].players[data.id].pos[0]--;
         }
         else {
-          // console.log("No Direction Given? " + data.dir)
+          console.log("No Direction Given? " + data.dir)
         }
         games[data.gameId].players[game.idTurn].dir = data.dir;
 
 
+
+
+
       }
-      
-      
-      
-      checkBase(games[data.gameId])
-      
-      
-     
-      // console.log(game.players[0].pos)
-      // console.log(game.players[1].pos)
+ checkNode(data.id, data.gameId);
+ checkBase(data.id, data.gameId);
+ playerCollide(data.id, data.gameId);
+ 
     });
 
     socket.on("display", function() {
@@ -268,12 +259,13 @@ function resetGame(gameToReset) {
 energyArr.push(gameToReset.bases[i].energy)
    }
    energyArr = energyArr.sort();
-  // console.log("ENERGYARR", energyArr)
+   console.log("ENERGYARR", energyArr)
    if(energyArr[energyArr.length-1] != energyArr[energyArr.length-2]){
      broadcast("endGame", {"winner":gameToReset.players[winner.id], "base": winner, "gameId": gameToReset.gameId}, sockets[gameToReset.gameId])
      broadcast("endGame", {"winner": gameToReset.players[winner.id], "base": winner, "gameId": gameToReset.gameId}, displays)
     addWin(gameToReset.players[winner.id].name)
    } else{
+     console.log("WINR",gameToReset.players[winner.id])
         broadcast("endGame", {"winner": "tie", "gameId": gameToReset.gameId}, sockets[gameToReset.gameId])
      broadcast("endGame", {"winner": "tie", "gameId": gameToReset.gameId}, displays)
    }
@@ -353,14 +345,6 @@ function startGame(queued) {
   var loop = setInterval(function() {
     // console.log("LOOPING" + games[ind].players.length + " should be above zero, algong with " + sockets.length + ", but " + queueSockets.length + " should be zero.")
     if (games[ind].turn >= 200) {
-      console.log()
-      
-                 console.log(games[ind].players[0].pos + " END On  base " + games[ind].bases[0].pos)
-           console.log("player energy: " + games[ind].players[0].energy + " base energy : " + games[ind].bases[0].energy);
-      
-      broadcast("draw", games, displays);
-      
-      
       clearInterval(loop)
       resetGame(games[ind])
     }
@@ -368,38 +352,10 @@ function startGame(queued) {
 
       games[ind].turn++;
 games[ind].idTurn = games[ind].turn % games[ind].players.length
-      // console.log("GAMEID " + game.idTurn)
+      console.log("GAMEID " + game.idTurn)
       for (var i = 0; i < game.players.length; i++) {
-
         games[ind].players[i].x = games[ind].players[i].pos[0];
         games[ind].players[i].y = games[ind].players[i].pos[1];
-        // if(game.players.pos)
-        for (let j = 0; j < games[ind].players.length; j++) {
-          if (j != i) {
-                    if (games[ind].players[j].pos[1] == games[ind].bases[i].pos[1] && games[ind].players[j].pos[0] == games[ind].bases[i].pos[0]) {
-          games[ind].players[j].energy += games[ind].bases[i].energy
-         games[ind].bases[i].energy= 0;
-        }
-            
-
-
-            if (games[ind].players[i].pos[1] == games[ind].players[j].pos[1] && games[ind].players[i].pos[0] == games[ind].players[j].pos[0]) {
-              if (games[ind].players[i].energy > games[ind].players[j].energy) {
-                games[ind].players[i].energy = Math.ceil((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-                games[ind].players[j].energy = Math.floor((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-              }
-              else if (games[ind].players[i].energy < games[ind].players[j].energy) {
-                games[ind].players[j].energy = Math.ceil((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-                games[ind].players[i].energy = Math.floor((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-              }
-            }
-          }
-
-
-        }
-        
-checkBase(games[ind]);
-
       }
       games[ind].myBot = games[ind].players[games[ind].idTurn];
 
@@ -408,19 +364,13 @@ checkBase(games[ind]);
           games[ind].nodes[i].energy++;
         }
       }
-      for (var i = 0; i < games[ind].nodes.length; i++) {
-        if (games[ind].players[games[ind].idTurn].pos[1] == games[ind].nodes[i].pos[1] && games[ind].players[games[ind].idTurn].pos[0] == games[ind].nodes[i].pos[0]) {
-          games[ind].players[games[ind].idTurn].energy += games[ind].nodes[i].energy;
-          games[ind].nodes[i].energy = 0;
-        }
-      }
       broadcast("draw", games, displays);
       sockets[ind][games[ind].idTurn].emit("update", games[ind]);
-      // console.log("EMMITING TO " + games[ind].idTurn + " ")
+      console.log("EMMITING TO " + games[ind].idTurn + " ")
 
     }
     
-  }, 200)
+  }, 30)
 }
 
 function addWin(userName){
@@ -458,18 +408,46 @@ function checkCollide(x, y, game) {
   return true;
 }
 
-function checkBase(gameToCheck){
-  console.log("checkingbase!")
-        for(var i=0;i<gameToCheck.players.length;i++){
-        if (gameToCheck.players[i].pos[1] == gameToCheck.bases[i].pos[1] && gameToCheck.players[i].pos[0] == gameToCheck.bases[i].pos[0]) {
-          gameToCheck.bases[i].energy += gameToCheck.players[i].energy
-          gameToCheck.players[i].energy = 0;
-           console.log(gameToCheck.players[i].pos + " On  base " + gameToCheck.bases[i].pos)
-           console.log("player energy: " + gameToCheck.players[i].energy + " base energy : " + gameToCheck.bases[i].energy);
-        } else {
-          if(i == 0){
-          console.log(gameToCheck.players[i].pos + " BASE POS " + gameToCheck.bases[i].pos)
-          }
+
+function playerCollide(playerId, gameInd){
+  for(var j=0;j<games[gameInd].players.length;j++){
+       if (games[gameInd].players[playerId].pos[1] == games[gameInd].players[j].pos[1] && games[gameInd].players[playerId].pos[0] == games[gameInd].players[j].pos[0]) {
+              if (games[gameInd].players[playerId].energy > games[gameInd].players[j].energy) {
+                games[gameInd].players[playerId].energy = Math.ceil((games[gameInd].players[playerId].energy + games[gameInd].players[j].energy) / 2)
+                games[gameInd].players[j].energy = Math.floor((games[gameInd].players[playerId].energy + games[gameInd].players[j].energy) / 2)
+              }
+              else if (games[gameInd].players[playerId].energy < games[gameInd].players[j].energy) {
+                games[gameInd].players[j].energy = Math.ceil((games[gameInd].players[playerId].energy + games[gameInd].players[j].energy) / 2)
+                games[gameInd].players[playerId].energy = Math.floor((games[gameInd].players[playerId].energy + games[gameInd].players[j].energy) / 2)
+              }
+}
+}
+}
+function checkBase(playerId, gameInd){
+    if (games[gameInd].players[playerId].pos[1] == games[gameInd].bases[playerId].pos[1] && games[gameInd].players[playerId].pos[0] == games[gameInd].bases[playerId].pos[0]) {
+          games[gameInd].bases[playerId].energy += games[gameInd].players[playerId].energy
+          games[gameInd].players[playerId].energy = 0;
+          console.log("ONBASE!")
+        } else{
+          console.log("noot!" + games[gameInd].players[playerId].pos, games[gameInd].bases[playerId].pos)
         }
+        for(var i=0;i<games[gameInd].bases.length;i++){
+                    if (games[gameInd].players[playerId].pos[1] == games[gameInd].bases[i].pos[1] && games[gameInd].players[playerId].pos[0] == games[gameInd].bases[i].pos[0]) {
+          games[gameInd].players[playerId].energy += games[gameInd].bases[i].energy
+         games[gameInd].bases[i].energy= 0;
+        }
+        }
+  
+}
+function checkNode(playerId, gameInd){
+  
+     for (var i = 0; i < games[gameInd].nodes.length; i++) {
+
+        if (games[gameInd].players[playerId].pos[1] == games[gameInd].nodes[i].pos[1] && games[gameInd].players[playerId].pos[0] == games[gameInd].nodes[i].pos[0]) {
+          games[gameInd].players[playerId].energy += games[gameInd].nodes[i].energy;
+          games[gameInd].nodes[i].energy = 0;
+
+        }
+  
 }
 }

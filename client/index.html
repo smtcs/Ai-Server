@@ -55,11 +55,11 @@
     <div id="scoreboard" style="display: inline-block;">
     </div>
     <select id="selectGame">
-  <option value="0">0</option>
-  <option value="1">2</option>
-  <option value="2">3</option>
-  <option value="3">4</option>
-    <option value="4">5</option>
+  <option value="0">Game 1</option>
+  <option value="1">Game 2</option>
+  <option value="2">Game 3</option>
+  <option value="3">Game 4</option>
+    <option value="4">Game 5</option>
 </select>
   </div>
 
@@ -143,7 +143,7 @@
 
       for (var i = 0; i < gameToDraw.barricades.length; i++) {
         ctx.fillStyle = "pink";
-        ctx.fillRect(gameToDraw.barricades[i][1] * xSize, gameToDraw.barricades[i][0] * ySize, xSize, ySize)
+        ctx.fillRect(gameToDraw.barricades[i][0] * xSize, gameToDraw.barricades[i][1] * ySize, xSize, ySize)
       }
       // ctx.fillStyle = game.players[ind].color;
       // console.log(game.players[ind].color + game.players[ind].dir)
@@ -159,7 +159,6 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     
   }
 
-  console.log(game.players.length + "      and     "  + game.idTurn)
 
       // ctx.fillRect((x) * xSize, (y) * ySize, xSize, ySize);
     }
@@ -242,7 +241,6 @@ for(let i=0;i<gameToDraw.players.length;i++) {
       // update(game.players[game.players.length-1].pos[0],game.players[game.players.length-1].pos[1]);
       // }
     })
-
    socket.on("endGame", function(obj){
      if(games[parseInt(selectGame.options[selectGame.selectedIndex].value)].gameId == obj.gameId ){
    if(obj.winner == "tie"){
@@ -251,11 +249,19 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     // alert("Yay! Congrats to " + obj.winner.name + " who won with an astounding energy score of " + obj.base.energy + "!");
      
    }
+   
+   for(let i=0;i<games.length;i++){
+     if(games[i].running){
+       
+       break;
+     }
+   }
      }
    })
     socket.on("draw", function(data) {
+      
  let gameToDraw = data[parseInt(selectGame.options[selectGame.selectedIndex].value)];
-
+console.log(gameToDraw)
 
 if(lastCoords != null){
   for (let i = 0; i < gameToDraw.players.length; i++) {
