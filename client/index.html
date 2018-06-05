@@ -266,7 +266,12 @@ console.log(gameToDraw)
 if(lastCoords != null){
   for (let i = 0; i < gameToDraw.players.length; i++) {
           // console.log(gameToDraw.players[i])
+          try{
           clear(lastCoords.players[i].pos[0], lastCoords.players[i].pos[1]);
+          }
+          catch(err){
+            location.reload();
+          }
         
         }
 }
