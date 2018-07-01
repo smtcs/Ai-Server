@@ -27,6 +27,12 @@
 
   <canvas id="canvas" width="600px" height="600px" style="display: inline-block;"></canvas>
 
+<input type="range" min="5" max="200" value="50" id="speed" style = "position: absolute; top: 605px; left: 200px;"></input>
+<div style = "position: absolute; top: 610px; border: 1px solid;"id = "names">
+  
+  
+  </div>
+
   <div style="display: none;">
     <img src="imgs/redbackwards.png" id="rednorth" />
     <img src="imgs/redforwards.png" id="redsouth" />
@@ -69,6 +75,7 @@
   <!--<script src="/js/bootstrap.min.js"></script>-->
   <!--<script src="/js/angular.min.js"></script>-->
   <script>
+  var rerunObj;
   var lastCoords;
     var barricades = [];
     var socket = io.connect();
@@ -145,8 +152,7 @@
         ctx.fillStyle = "pink";
         ctx.fillRect(gameToDraw.barricades[i][0] * xSize, gameToDraw.barricades[i][1] * ySize, xSize, ySize)
       }
-      // ctx.fillStyle = game.players[ind].color;
-      // console.log(game.players[ind].color + game.players[ind].dir)
+      
 for(let i=0;i<gameToDraw.players.length;i++) {
   if(!(gameToDraw.players[i].dir== "south" || gameToDraw.players[i].dir== "north" ||gameToDraw.players[i].dir== "east" || gameToDraw.players[i].dir== "west"  )){
     gameToDraw.players[i].dir = "south";
@@ -192,18 +198,17 @@ for(let i=0;i<gameToDraw.players.length;i++) {
 
     }
 
-    function nodes(game) {
-      for (var i = 0; i < game.nodes.length; i++) {
+    function nodes(loopArr) {
+      for (var i = 0; i < loopArr.length; i++) {
         ctx.fillStyle = "purple";
-        ctx.fillRect(game.nodes[i].pos[0] * xSize, game.nodes[i].pos[1] * ySize, xSize, ySize);
+        ctx.fillRect(loopArr[i].pos[0] * xSize, loopArr[i].pos[1] * ySize, xSize, ySize);
         ctx.font = "20px Arial";
         ctx.fillStyle = "white"
-        ctx.fillText(game.nodes[i].energy, game.nodes[i].pos[0] * xSize, (game.nodes[i].pos[1] * ySize) + ySize);
+        ctx.fillText(loopArr[i].energy, loopArr[i].pos[0] * xSize, (loopArr[i].pos[1] * ySize) + ySize);
       }
     }
 
     function clear(x, y) {
-      console.log("clearing", x, y);
       grid[x][y] = 0;
       ctx.fillStyle = "white";
       ctx.fillRect(((x) * xSize), ((y) * ySize), xSize, ySize);
@@ -215,9 +220,92 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     var myDir = ["north", "east", "south", "west"];
     var games;
     drawGrid();
+    
+  socket.on("rerunGameData", function(data){
+    rerunObj = data;
+    let ind = 0;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0,0,600,600);
+    drawGrid();
+    
+    
+    
+  // var rerunLoop =   setInterval(function(){
+
+    // },50)
+  
+    
+    
+    function loop() {
+      rerunObj.players[ind % 3].pos = rerunObj.turns[ind];
+      
+      
+      // console.log(ind > rerunObj.turns.length)
+    nodes(rerunObj.map.nodes)
+ 
+      for (var i = 0; i < rerunObj.map.barricades.length; i++) {
+        ctx.fillStyle = "pink";
+        ctx.fillRect(rerunObj.map.barricades[i][0] * xSize, rerunObj.map.barricades[i][1] * ySize, xSize, ySize)
+        
+      }
+      
+      ctx.fillStyle = rerunObj.players[ind % 3].color;
+      ctx.fillRect(rerunObj.map.bases[ind % 3].pos[0] * xSize,rerunObj.map.bases[ind % 3].pos[1] * ySize,xSize,ySize)
+       
+      ctx.font = "20px Arial";
+        ctx.fillStyle = "white"
+        ctx.fillText(rerunObj.map.bases[ind % 3].energy, rerunObj.map.bases[ind % 3].pos[0] * xSize, (rerunObj.map.bases[ind % 3].pos[1] * ySize) + ySize);
+    
+
+    
+    if (ind % 3 == 0) {
+        for (var i = 0; i < rerunObj.map.nodes.length; i++) {
+          rerunObj.map.nodes[i].energy++;
+        }
+      }
+      
+    checkNodes(rerunObj.players[ind % 3], rerunObj.map.nodes)
+    checkBase(rerunObj.players,rerunObj.map.bases)
+    checkCollide(rerunObj.players)
+         scoreboard(rerunObj.players, rerunObj.map.bases)
+    
+    
+    
+    if(ind > 2){
+        clear(rerunObj.turns[ind-3][0],rerunObj.turns[(ind-3)][1])
+      }
+       ctx.drawImage(playerImgs[rerunObj.players[ind % 3].color + rerunObj.players[ind % 3].dir], rerunObj.turns[ind][0] * xSize, rerunObj.turns[ind][1] * ySize, xSize, ySize);
+    // console.log(playerImgs[rerunObj.players[ind % 3].color + rerunObj.players[ind % 3].dir])
+      console.log(rerunObj.turns[ind][0]+ ", " +rerunObj.turns[ind][1] )
+    
+      
+    
+      ind++;
+      if(ind <= rerunObj.turns.length-1){
+         window.setTimeout(loop, parseInt(document.getElementById("speed").value));
+      }
+ 
+}
+loop();
+    
+  })
+    socket.on("replayNames", function(stringArr){
+        let p;
+    for(var i=stringArr.length-1;i>=0;i--){
+      p = document.createElement("P");
+    p.innerHTML = i+1 +". " +stringArr[i];
+    p.onclick = function(){
+      socket.emit("rerunGame", parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1);
+    }
+         document.getElementById("names").appendChild(p);
+    }    
+   
+    })
+    
+    
     socket.on("queue", function(data) {
       games = data;
-      // barricades = data.barricades;
+      
       
       for (var i = 0; i < data.length; i++) {
         if (data[i].running) {
@@ -257,12 +345,35 @@ for(let i=0;i<gameToDraw.players.length;i++) {
      }
    }
      }
+     
+     
+     
+
+     
+     
+     
    })
     socket.on("draw", function(data) {
       
  let gameToDraw = data[parseInt(selectGame.options[selectGame.selectedIndex].value)];
 console.log(gameToDraw)
 
+// if(gameToDraw.turn >= gameToDraw.totalTurns){
+//   let tempStr = "";
+//   let tempNum = (parseInt(document.getElementById("names").innerHTML.substring(9,10))  + 1)
+//       let p =  document.createElement("P");
+//     for(var i=0;i<gameToDraw.players.length;i++){
+//       tempStr += tempNum + ". " + gameToDraw.players[i].name + " ";
+//     }
+//     p.innerHTML = tempStr;
+//         p.onclick = function(){
+//           alert(tempNum - 1 )
+//       socket.emit("rerunGame", tempNum - 1  );
+      
+//     }
+    
+//         document.getElementById("names").appendChild(p);
+// }
 if(lastCoords != null){
   for (let i = 0; i < gameToDraw.players.length; i++) {
           try{
@@ -283,11 +394,10 @@ lastCoords = gameToDraw;
 
       if (gameToDraw.running) {
       
-        document.getElementById("scoreboard").innerHTML = "";
-        for (var i = 0; i < gameToDraw.players.length; i++) {
-          document.getElementById("scoreboard").innerHTML += "Player" + i + ": <br> energy: " + gameToDraw.players[i].energy + "<br> name: " + gameToDraw.players[i].name + "<br> base energy: " + gameToDraw.bases[i].energy + "<br> <br> <br> ";
-        }
-        nodes(gameToDraw);
+      
+        scoreboard(gameToDraw.players, gameToDraw.bases)
+        console.log(gameToDraw)
+        nodes(gameToDraw.nodes);
         bases(gameToDraw);
      
           // clear(gameToDraw.players[i].pos[1],gameToDraw.players[i].pos[0]);
@@ -314,6 +424,69 @@ lastCoords = gameToDraw;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       drawGrid();
     }
+    
+    function scoreboard(players,bases){
+        document.getElementById("scoreboard").innerHTML = "";
+        for (var i = 0; i < players.length; i++) {
+          document.getElementById("scoreboard").innerHTML += "Player" + (i+1) + ": <br> energy: " + players[i].energy + "<br> name: " + players[i].name + "<br> base energy: " + bases[i].energy + "<br> <br> <br> ";
+        }
+    }
+    
+    
+    function checkBase(players, bases){
+        for(var i=0;i<players.length;i++){
+        if (players[i].pos[1] == bases[i].pos[1] && players[i].pos[0] == bases[i].pos[0]) {
+          bases[i].energy += players[i].energy
+          players[i].energy = 0;
+        }
+
+          for(var j=0;j<players.length;j++){
+            if(j != i){
+                        if (players[j].pos[1] == bases[i].pos[1] && players[j].pos[0] == bases[i].pos[0]) {
+   
+          players[j].energy += bases[i].energy
+         bases[i].energy= 0;
+         
+        }
+          }
+          }
+        }
+}
+
+function checkNodes(player, nodes){
+    for (var i = 0; i < nodes.length; i++) {
+        if (player.pos[1] == nodes[i].pos[1] && player.pos[0] == nodes[i].pos[0]) {
+          player.energy += nodes[i].energy;
+          nodes[i].energy = 0;
+        }
+      }
+}
+
+function checkCollide(players){
+  for (var i = 0; i < players.length; i++) {
+
+        for (let j = 0; j < players.length; j++) {
+          if (j != i) {
+            if (players[i].pos[1] == players[j].pos[1] && players[i].pos[0] == players[j].pos[0]) {
+              if (players[i].energy > players[j].energy) {
+                players[i].energy = Math.ceil((players[i].energy + players[j].energy) / 2)
+                players[j].energy = Math.floor((players[i].energy + players[j].energy) / 2)
+              }
+              else if (players[i].energy < players[j].energy) {
+                players[j].energy = Math.ceil((players[i].energy + players[j].energy) / 2)
+                players[i].energy = Math.floor((players[i].energy + players[j].energy) / 2)
+              }
+            }
+          }
+
+
+        }
+        
+
+      }
+}
+    
+    
   </script>
 </body>
 

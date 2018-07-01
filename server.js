@@ -67,7 +67,7 @@ class Player {
 
 //Game function
 function Game(gameId) {
-  this.totalTurns = 500;
+  this.totalTurns = 300; //This should alawys be at least 15 & a multiple of the player number!
   this.running = false;
   this.gameId = gameId;
   this.map = "";
@@ -100,7 +100,10 @@ io.on('connection', function(socket) {
     /* @Desc: Takes new direction from player and determines new position
      * @Params: data{} - dir(srt): direction chosen by player - name(str): name of player sending data
      */
-
+socket.on("rerunGame", function(num){
+  replay.games[num].map = maps[replay.games[num].mapNum];
+  broadcast("rerunGameData", replay.games[num], displays)
+})
     socket.on("new direction", function(data) {
 
       if (data.id == games[data.gameId].idTurn) {
@@ -124,18 +127,27 @@ io.on('connection', function(socket) {
       }
       
       checkBase(data.gameId)
-            let posGameData=  games[data.gameId].players[data.id].pos;
-     
-            
-      gameData[data.gameId].turns.push(JSON.parse(JSON.stringify(posGameData)));
       
     });
 
     socket.on("display", function() {
       displays.push(socket)
+let stringArr = [];
+let tempStr  ="";
+    for(let thing in replay.games){
+    
+      tempStr = "";
+      for(let i in replay.games[thing].players){
+        tempStr += replay.games[thing].players[i].name + " ";
+      }
+        if(tempStr.length > 0){
+stringArr.push(tempStr);
+      }
+      }
+
+      broadcast("replayNames", stringArr, displays)
       broadcast("queue", games, displays);
     })
-
     socket.on("name", function(key) {
       let tempname = checkKey(key);
       if (tempname) {
@@ -168,18 +180,15 @@ server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function() 
   var addr = server.address();
   console.log("Chat server listening at", addr.address + ":" + addr.port);
 });
-
 function resetGame(gameToReset) {
   // gameData[gameToReset.gameId].turns[0]
+  console.log("the" + JSON.stringify(gameData[gameToReset.gameId]))
   
-  console.log("the" + gameData[gameToReset.gameId])
-console.log("oiii" + JSON.stringify(replay));  
 replay.games.push(JSON.parse(JSON.stringify(gameData[gameToReset.gameId])));
 // console.log("oiii" + JSON.stringify(newGameData));
 // console.log("newgamedadta" + newGameData)
   fs.writeFileSync("replay.json", JSON.stringify(replay))
   gameData[gameToReset.gameId] = {};
-  
   var energyArr = [];
   var winner = gameToReset.bases[0];
   for(var i=0;i<gameToReset.bases.length;i++){
@@ -244,14 +253,12 @@ function startGame(queued) {
   console.log("before loop starts", games[ind].players[0]);
   gameData[ind].mapNum = games[ind].mapNumber;
   gameData[ind].turns = [];
-  for(var i=0;i<games[ind].players.length;i++){
-    gameData[ind].turns[i] = games[ind].players[i].pos
-  }
   gameData[ind].players = games[ind].players;
+  
   
   var loop = setInterval(function() {
     // console.log("LOOPING" + games[ind].players.length + " should be above zero, algong with " + sockets.length + ", but " + queueSockets.length + " should be zero.")
-    if (games[ind].turn >= games[ind].totalTurns) {
+    if (games[ind].turn == games[ind].totalTurns + PLAYER_NUMBER) {
       broadcast("draw", games, displays);
       
       
@@ -261,9 +268,12 @@ function startGame(queued) {
     }
     else {
 
-
       games[ind].idTurn = games[ind].turn % games[ind].players.length
 
+
+
+let posGameData=  games[ind].players[games[ind].idTurn].pos;
+      gameData[ind].turns.push(JSON.parse(JSON.stringify(posGameData)));
 
 // console.log(gameData[ind].turns[games[ind].idTurn])
 
@@ -311,7 +321,6 @@ checkBase(ind);
       // console.log("EMMITING TO " + games[ind].idTurn + " ")
 
           games[ind].turn++;
-      
     }
     
   }, 50)
