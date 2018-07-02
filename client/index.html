@@ -19,6 +19,26 @@
       top: 0px;
       left: 0px;
     }
+    
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    background: #d3d3d3;
+    height: 4px;
+    outline: none;
+    cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 100%;
+    background: #ff2828;
+    cursor: pointer;
+}
+    
   </style>
 
 </head>
@@ -27,8 +47,8 @@
 
   <canvas id="canvas" width="600px" height="600px" style="display: inline-block;"></canvas>
 
-<input type="range" min="5" max="200" value="50" id="speed" style = "position: absolute; top: 605px; left: 200px;"></input>
-<div style = "position: absolute; top: 610px; border: 1px solid;"id = "names">
+<input type="range" min="0" max="200" value="0" id="time" style = "position: absolute; top: 580px; left: 0px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
+<div style = "position: absolute; top: 630px; border: 1px solid;"id = "names">
   
   
   </div>
@@ -221,21 +241,55 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     var games;
     drawGrid();
       let rerunLoop;
+          let ind = 0;
+      var time = document.getElementById("time");
+      
+      let tempNum = 0;
+      time.onchange = function(){
+        tempNum = time.value;
+        // ind = time.value;
+        clearInterval(rerunLoop)
+        ind = 0;
+        for(var k = 0;k<rerunObj.players.length;k++){
+          rerunObj.players[k].energy = 0;
+        }
+        for(var i=0;i<rerunObj.map.nodes.length;i++){
+          rerunObj.map.nodes[i].energy = 0;
+        }
+        for(var j=0;j<rerunObj.map.bases.length;j++){
+          rerunObj.map.bases[j].energy = 0;
+        }
+        for(let i=0;i<time.value;i++){
+          // alert(i + " out of " + time.value)
+          loop(true);
+        }
+        
+        ind = tempNum;
+          rerunLoop  = setInterval(function(){loop(false);},50);
+      }
+      
   socket.on("rerunGameData", function(data){
-  
-    clearInterval(rerunLoop)
-    
+    clearInterval(rerunLoop);
     rerunObj = data;
-    let ind = 0;
+ind = 0;
     ctx.fillStyle = "white";
     ctx.fillRect(0,0,600,600);
     drawGrid();
+    time.max = rerunObj.turns.length-1;
     
     
     rerunLoop  = setInterval(loop,50);
-    function loop() {
+
+  })
+     function loop(isRerunning) {
       rerunObj.players[ind % rerunObj.players.length].pos = rerunObj.turns[ind];
       
+    if(!isRerunning){  
+     if(ind % 7 == 0){
+      time.value = ind;
+     }
+    }
+      // ind = time.value;
       
       checkNodes(rerunObj.players[ind % rerunObj.players.length], rerunObj.map.nodes)
     checkBase(rerunObj.players,rerunObj.map.bases)
@@ -272,17 +326,11 @@ for(let i=0;i<gameToDraw.players.length;i++) {
         rerunObj.players[ind% rerunObj.players.length].dir = "south"
       }
        ctx.drawImage(playerImgs[rerunObj.players[ind % rerunObj.players.length].color + rerunObj.players[ind % rerunObj.players.length].dir], rerunObj.turns[ind][0] * xSize, rerunObj.turns[ind][1] * ySize, xSize, ySize);
-      console.log(rerunObj.turns[ind][0]+ ", " +rerunObj.turns[ind][1] );
       ind++;
-      if(ind <= rerunObj.turns.length-1){
-        // window.setTimeout(loop, parseInt(document.getElementById("speed").value));
-      } else{
-        clearInterval(rerunLoop)
+      if(ind >= rerunObj.turns.length){
+        clearInterval(rerunLoop);
       }
 }
-loop();
-    
-  })
     socket.on("replayNames", function(stringArr){
         let p;
     for(var i=stringArr.length-1;i>=0;i--){
