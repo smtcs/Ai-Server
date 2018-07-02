@@ -220,8 +220,11 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     var myDir = ["north", "east", "south", "west"];
     var games;
     drawGrid();
-    
+      let rerunLoop;
   socket.on("rerunGameData", function(data){
+  
+    clearInterval(rerunLoop)
+    
     rerunObj = data;
     let ind = 0;
     ctx.fillStyle = "white";
@@ -229,32 +232,29 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     drawGrid();
     
     
-    
-  // var rerunLoop =   setInterval(function(){
-
-    // },50)
-  
-    
-    
+    rerunLoop  = setInterval(loop,50);
     function loop() {
-      rerunObj.players[ind % 3].pos = rerunObj.turns[ind];
+      rerunObj.players[ind % rerunObj.players.length].pos = rerunObj.turns[ind];
       
       
-      // console.log(ind > rerunObj.turns.length)
+      checkNodes(rerunObj.players[ind % rerunObj.players.length], rerunObj.map.nodes)
+    checkBase(rerunObj.players,rerunObj.map.bases)
+    checkCollide(rerunObj.players)
+         scoreboard(rerunObj.players, rerunObj.map.bases)
     nodes(rerunObj.map.nodes)
  
       for (var i = 0; i < rerunObj.map.barricades.length; i++) {
-        ctx.fillStyle = "pink";
+        ctx.fillStyle = "pink"
         ctx.fillRect(rerunObj.map.barricades[i][0] * xSize, rerunObj.map.barricades[i][1] * ySize, xSize, ySize)
         
       }
       
-      ctx.fillStyle = rerunObj.players[ind % 3].color;
-      ctx.fillRect(rerunObj.map.bases[ind % 3].pos[0] * xSize,rerunObj.map.bases[ind % 3].pos[1] * ySize,xSize,ySize)
+      ctx.fillStyle = rerunObj.players[ind % rerunObj.players.length].color;
+      ctx.fillRect(rerunObj.map.bases[ind % rerunObj.players.length].pos[0] * xSize,rerunObj.map.bases[ind % rerunObj.players.length].pos[1] * ySize,xSize,ySize)
        
       ctx.font = "20px Arial";
         ctx.fillStyle = "white"
-        ctx.fillText(rerunObj.map.bases[ind % 3].energy, rerunObj.map.bases[ind % 3].pos[0] * xSize, (rerunObj.map.bases[ind % 3].pos[1] * ySize) + ySize);
+        ctx.fillText(rerunObj.map.bases[ind % rerunObj.players.length].energy, rerunObj.map.bases[ind % rerunObj.players.length].pos[0] * xSize, (rerunObj.map.bases[ind % rerunObj.players.length].pos[1] * ySize) + ySize);
     
 
     
@@ -264,27 +264,21 @@ for(let i=0;i<gameToDraw.players.length;i++) {
         }
       }
       
-    checkNodes(rerunObj.players[ind % 3], rerunObj.map.nodes)
-    checkBase(rerunObj.players,rerunObj.map.bases)
-    checkCollide(rerunObj.players)
-         scoreboard(rerunObj.players, rerunObj.map.bases)
-    
-    
-    
-    if(ind > 2){
-        clear(rerunObj.turns[ind-3][0],rerunObj.turns[(ind-3)][1])
+
+    if(ind > rerunObj.players.length-1){
+        clear(rerunObj.turns[ind-rerunObj.players.length][0],rerunObj.turns[(ind-rerunObj.players.length)][1])
       }
-       ctx.drawImage(playerImgs[rerunObj.players[ind % 3].color + rerunObj.players[ind % 3].dir], rerunObj.turns[ind][0] * xSize, rerunObj.turns[ind][1] * ySize, xSize, ySize);
-    // console.log(playerImgs[rerunObj.players[ind % 3].color + rerunObj.players[ind % 3].dir])
-      console.log(rerunObj.turns[ind][0]+ ", " +rerunObj.turns[ind][1] )
-    
-      
-    
+      if(rerunObj.players[ind% rerunObj.players.length].dir == "" ||rerunObj.players[ind% rerunObj.players.length].dir == null  ){
+        rerunObj.players[ind% rerunObj.players.length].dir = "south"
+      }
+       ctx.drawImage(playerImgs[rerunObj.players[ind % rerunObj.players.length].color + rerunObj.players[ind % rerunObj.players.length].dir], rerunObj.turns[ind][0] * xSize, rerunObj.turns[ind][1] * ySize, xSize, ySize);
+      console.log(rerunObj.turns[ind][0]+ ", " +rerunObj.turns[ind][1] );
       ind++;
       if(ind <= rerunObj.turns.length-1){
-         window.setTimeout(loop, parseInt(document.getElementById("speed").value));
+        // window.setTimeout(loop, parseInt(document.getElementById("speed").value));
+      } else{
+        clearInterval(rerunLoop)
       }
- 
 }
 loop();
     

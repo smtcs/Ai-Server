@@ -67,7 +67,7 @@ class Player {
 
 //Game function
 function Game(gameId) {
-  this.totalTurns = 300; //This should alawys be at least 15 & a multiple of the player number!
+  this.totalTurns = 100; //This should alawys be at least 15 & a multiple of the player number!
   this.running = false;
   this.gameId = gameId;
   this.map = "";
@@ -102,12 +102,13 @@ io.on('connection', function(socket) {
      */
 socket.on("rerunGame", function(num){
   replay.games[num].map = maps[replay.games[num].mapNum];
-  broadcast("rerunGameData", replay.games[num], displays)
+  socket.emit("rerunGameData", replay.games[num])
 })
     socket.on("new direction", function(data) {
 
+//checking the turn is still on the player who sent this direction. If it's not, the direction sent is disregarded. 
       if (data.id == games[data.gameId].idTurn) {
-
+        //changing the player's position based on the string, also making sure they're not going off the map or into a barricade.
         if (data.dir == "north" && games[data.gameId].players[data.id].pos[1] > 0 && checkCollide(games[data.gameId].players[data.id].pos[0], games[data.gameId].players[data.id].pos[1] - 1, games[data.gameId])) {
           games[data.gameId].players[data.id].pos[1]--;
         }
@@ -121,7 +122,6 @@ socket.on("rerunGame", function(num){
      
           games[data.gameId].players[data.id].pos[0]--;
         }
-
         games[data.gameId].players[games[data.gameId].idTurn].dir = data.dir;
 
       }
@@ -132,6 +132,8 @@ socket.on("rerunGame", function(num){
 
     socket.on("display", function() {
       displays.push(socket)
+      
+      //Sending name data for selection for replaying games
 let stringArr = [];
 let tempStr  ="";
     for(let thing in replay.games){
@@ -149,8 +151,9 @@ stringArr.push(tempStr);
       broadcast("queue", games, displays);
     })
     socket.on("name", function(key) {
+      //making sure the key is a key in the database.
       let tempname = checkKey(key);
-      if (tempname) {
+      if (tempname ) {
         socket.playerName = tempname;
         queueSockets.push(socket);
 
@@ -165,10 +168,9 @@ stringArr.push(tempStr);
       }
 
     })
-
 });
 
-//Pass teh array to go through as a parameter.
+//Pass the array to go through as a parameter.
 function broadcast(event, data, arr) {
   arr.forEach(function(socket) {
     socket.emit(event, data);
@@ -181,12 +183,8 @@ server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function() 
   console.log("Chat server listening at", addr.address + ":" + addr.port);
 });
 function resetGame(gameToReset) {
-  // gameData[gameToReset.gameId].turns[0]
-  console.log("the" + JSON.stringify(gameData[gameToReset.gameId]))
-  
+  console.log("Adding to database: " + JSON.stringify(gameData[gameToReset.gameId]))
 replay.games.push(JSON.parse(JSON.stringify(gameData[gameToReset.gameId])));
-// console.log("oiii" + JSON.stringify(newGameData));
-// console.log("newgamedadta" + newGameData)
   fs.writeFileSync("replay.json", JSON.stringify(replay))
   gameData[gameToReset.gameId] = {};
   var energyArr = [];
@@ -198,6 +196,7 @@ replay.games.push(JSON.parse(JSON.stringify(gameData[gameToReset.gameId])));
 energyArr.push(gameToReset.bases[i].energy)
    }
    energyArr = energyArr.sort();
+   //checking there isn't a tie between players
    if(energyArr[energyArr.length-1] != energyArr[energyArr.length-2]){
      broadcast("endGame", {"winner":gameToReset.players[winner.id], "base": winner, "gameId": gameToReset.gameId}, sockets[gameToReset.gameId])
      broadcast("endGame", {"winner": gameToReset.players[winner.id], "base": winner, "gameId": gameToReset.gameId}, displays)
@@ -271,54 +270,31 @@ function startGame(queued) {
       games[ind].idTurn = games[ind].turn % games[ind].players.length
 
 
-
+//Adding position information to add to the database for replays
 let posGameData=  games[ind].players[games[ind].idTurn].pos;
       gameData[ind].turns.push(JSON.parse(JSON.stringify(posGameData)));
 
-// console.log(gameData[ind].turns[games[ind].idTurn])
+playerCollide(ind) //checks player collision
 
-  
-
-
-      for (var i = 0; i < games[ind].players.length; i++) {
-
-        for (let j = 0; j < games[ind].players.length; j++) {
-          if (j != i) {
-            if (games[ind].players[i].pos[1] == games[ind].players[j].pos[1] && games[ind].players[i].pos[0] == games[ind].players[j].pos[0]) {
-              if (games[ind].players[i].energy > games[ind].players[j].energy) {
-                games[ind].players[i].energy = Math.ceil((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-                games[ind].players[j].energy = Math.floor((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-              }
-              else if (games[ind].players[i].energy < games[ind].players[j].energy) {
-                games[ind].players[j].energy = Math.ceil((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-                games[ind].players[i].energy = Math.floor((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-              }
-            }
-          }
-
-
-        }
-        
-checkBase(ind);
-
-      }
       games[ind].myBot = games[ind].players[games[ind].idTurn];
       games[ind].myBase = games[ind].bases[games[ind].idTurn];
 
+//adding energy to nodes
       if (games[ind].turn % 3 == 0) {
         for (var i = 0; i < games[ind].nodes.length; i++) {
           games[ind].nodes[i].energy++;
         }
       }
+      
       for (var i = 0; i < games[ind].nodes.length; i++) {
         if (games[ind].players[games[ind].idTurn].pos[1] == games[ind].nodes[i].pos[1] && games[ind].players[games[ind].idTurn].pos[0] == games[ind].nodes[i].pos[0]) {
           games[ind].players[games[ind].idTurn].energy += games[ind].nodes[i].energy;
           games[ind].nodes[i].energy = 0;
         }
       }
+      
       broadcast("draw", games, displays);
       sockets[ind][games[ind].idTurn].emit("update", games[ind]);
-      // console.log("EMMITING TO " + games[ind].idTurn + " ")
 
           games[ind].turn++;
     }
@@ -343,6 +319,19 @@ function checkKey(key) {
   let arr = Object.keys(data)
   for (let i = 0; i < arr.length; i++) {
     if (key == arr[i]) {
+      
+      for(let thing in games){
+        if(games[thing].players.length > 0){
+          for(var j=0;j<games[thing].players.length;j++){
+           if( data[key].username == games[thing].players[j].name){
+             return false;
+            
+           }
+          }
+        }
+      }
+ 
+      
       return data[key].username;
     }
   }
@@ -378,4 +367,27 @@ function checkBase(gameId){
           }
           }
         }
+}
+
+function playerCollide(ind){
+      for (var i = 0; i < games[ind].players.length; i++) {
+
+        for (let j = 0; j < games[ind].players.length; j++) {
+          if (j != i) {
+            if (games[ind].players[i].pos[1] == games[ind].players[j].pos[1] && games[ind].players[i].pos[0] == games[ind].players[j].pos[0]) {
+              if (games[ind].players[i].energy > games[ind].players[j].energy) {
+                games[ind].players[i].energy = Math.ceil((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
+                games[ind].players[j].energy = Math.floor((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
+              }
+              else if (games[ind].players[i].energy < games[ind].players[j].energy) {
+                games[ind].players[j].energy = Math.ceil((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
+                games[ind].players[i].energy = Math.floor((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
+              }
+            }
+          }
+
+
+        }
+
+      }
 }
