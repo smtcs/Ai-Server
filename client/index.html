@@ -293,6 +293,13 @@ for(let i=0;i<gameToDraw.players.length;i++) {
   })
      function loop(isRerunning) {
       rerunObj.players[ind % rerunObj.players.length].pos = rerunObj.turns[ind];
+     
+
+      
+          if(ind > rerunObj.players.length-1){
+        clear(rerunObj.turns[ind-rerunObj.players.length][0],rerunObj.turns[(ind-rerunObj.players.length)][1])
+      }
+      
       
     if(!isRerunning){  
       time.value = ind;
@@ -307,7 +314,7 @@ for(let i=0;i<gameToDraw.players.length;i++) {
       checkNodes(rerunObj.players[ind % rerunObj.players.length], rerunObj.map.nodes)
 
           checkCollide(rerunObj.players)
-                    checkBase(rerunObj.players,rerunObj.map.bases)
+          checkBase(rerunObj.players,rerunObj.map.bases)
          scoreboard(rerunObj.players, rerunObj.map.bases, (ind - (rerunObj.players.length-1)) +"/" + (rerunObj.turns.length-rerunObj.players.length) )
     nodes(rerunObj.map.nodes)
  
@@ -323,18 +330,18 @@ for(let i=0;i<gameToDraw.players.length;i++) {
       ctx.font = "20px Arial";
         ctx.fillStyle = "white"
         ctx.fillText(rerunObj.map.bases[ind % rerunObj.players.length].energy, rerunObj.map.bases[ind % rerunObj.players.length].pos[0] * xSize, (rerunObj.map.bases[ind % rerunObj.players.length].pos[1] * ySize) + ySize);
-    
 
 
-      
-
-    if(ind > rerunObj.players.length-1){
-        clear(rerunObj.turns[ind-rerunObj.players.length][0],rerunObj.turns[(ind-rerunObj.players.length)][1])
-      }
       if(rerunObj.players[ind% rerunObj.players.length].dir == "" ||rerunObj.players[ind% rerunObj.players.length].dir == null  ){
         rerunObj.players[ind% rerunObj.players.length].dir = "south"
       }
+      for(let i=0;i<rerunObj.players.length;i++){
        ctx.drawImage(playerImgs[rerunObj.players[ind % rerunObj.players.length].color + rerunObj.players[ind % rerunObj.players.length].dir], rerunObj.turns[ind][0] * xSize, rerunObj.turns[ind][1] * ySize, xSize, ySize);
+      }
+      
+      
+      
+      
       ind++;
       if(ind >= rerunObj.turns.length){
         displayWinner(rerunObj.players[rerunObj.winnerId].color,rerunObj.players[rerunObj.winnerId].name,rerunObj.map.bases[rerunObj.winnerId].energy, rerunObj.winnerId);
@@ -402,24 +409,23 @@ displayWinner(obj.winner.color, obj.winner.name, obj.base.energy, obj.winner.id)
  let gameToDraw = data[parseInt(selectGame.options[selectGame.selectedIndex].value)];
 
 
-if(lastCoords != null){
+
+
+      if (gameToDraw.running) {
+        if(lastCoords != null){
   for (let i = 0; i < gameToDraw.players.length; i++) {
-          
           clear(lastCoords.players[i].pos[0], lastCoords.players[i].pos[1]);
-        
-        
         }
 }
 
 lastCoords = gameToDraw;
-
-      if (gameToDraw.running) {
+        
         time.style.display = "none";
         scoreboard(gameToDraw.players, gameToDraw.bases,  (gameToDraw.turn-gameToDraw.players.length) + "/" + (gameToDraw.totalTurns))
         nodes(gameToDraw.nodes);
         bases(gameToDraw);
           show(gameToDraw)
-          ctx.drawImage(document.getElementById("live"),xSize * 9,0,60,ySize);
+          // ctx.drawImage(document.getElementById("live"),xSize * 9,0,60,ySize);
         }
       
      
