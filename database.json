@@ -1,17 +1,22 @@
 {
   "8miaaw7bkd4": {
     "username": "hello",
-    "wins": 35,
+    "wins": 42,
     "permName": false
   },
   "7enhdtntk52": {
     "username": "goodbye",
-    "wins": 158,
+    "wins": 198,
     "permName": false
   },
   "efqom7i9jl": {
     "username": "hesby",
-    "wins": 122,
+    "wins": 133,
+    "permName": false
+  },
+  "4alzuznij9f": {
+    "username": "JOE",
+    "wins": 1,
     "permName": false
   }
 }

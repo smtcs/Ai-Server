@@ -5,7 +5,6 @@ git add // Adds changed files to record.  -A will add all files
 git commit -m "message" // commits changes to be pushed
 git push // pushes all changes to github
 */
-
 var fs = require("fs")
 var http = require('http');
 var path = require('path');
@@ -14,7 +13,7 @@ var async = require('async');
 var socketio = require('socket.io');
 var express = require('express');
 var app = express();
-const PLAYER_NUMBER = 3;
+const PLAYER_NUMBER = 1; //Should be 4 when in use in classroom!
 
 var games = [];
 var queueSockets = [];
@@ -25,9 +24,6 @@ var data = JSON.parse(fs.readFileSync("database.json"));
 var maps = JSON.parse(fs.readFileSync("maps.json"))
 
 var replay = JSON.parse(fs.readFileSync("replay.json"))
-// console.log(replay)
-
-      // fs.writeFileSync("database.json", JSON.stringify(data, null, 2))
 var router = express();
 var server = http.createServer(router);
 var io = socketio.listen(server);
@@ -42,16 +38,16 @@ var sockets = [
 ];
 var displays = [];
 var cnt = 0;
-const posses = [
+const posses = [ // Initial player positions
   [1, 1],
   [18, 1],
   [18, 18],
   [1, 18]
 ];
-var colors = ["red", "blue", "yellow", "grey"];
+var colors = ["red", "blue", "yellow", "grey"]; // Player colors
 var tempName = "";
 
-class Player {
+class Player { 
   constructor(name, count) {
     this.id = count;
     this.color = colors[count]
@@ -67,7 +63,7 @@ class Player {
 
 //Game function
 function Game(gameId) {
-  this.totalTurns = 100; //This should alawys be at least 15 & a multiple of the player number!
+  this.totalTurns = 1000; //This should alawys be a multiple of the player number!
   this.running = false;
   this.gameId = gameId;
   this.map = "";
@@ -77,7 +73,6 @@ function Game(gameId) {
   this.socketIndex;
   let mapNum = Math.floor(Math.random() * maps.length);
   this.mapNumber = mapNum;
-  // mapNum = 1;
   this.bases = (JSON.parse(JSON.stringify(maps[mapNum].bases)));
   this.barricades = (JSON.parse(JSON.stringify(maps[mapNum].barricades)));
   this.nodes = JSON.parse(JSON.stringify(maps[mapNum].nodes));
@@ -126,13 +121,12 @@ socket.on("rerunGame", function(num){
 
       }
       
-      checkBase(data.gameId)
+     
       
     });
 
     socket.on("display", function() {
       displays.push(socket)
-      
       //Sending name data for selection for replaying games
 let stringArr = [];
 let tempStr  ="";
@@ -153,7 +147,7 @@ stringArr.push(tempStr);
     socket.on("name", function(key) {
       //making sure the key is a key in the database.
       let tempname = checkKey(key);
-      if (tempname ) {
+      if (tempname ) { //tempname is either false if authentification failed, or it is the name that associates with the key.
         socket.playerName = tempname;
         queueSockets.push(socket);
 
@@ -183,17 +177,14 @@ server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function() 
   console.log("Chat server listening at", addr.address + ":" + addr.port);
 });
 function resetGame(gameToReset) {
-  console.log("Adding to database: " + JSON.stringify(gameData[gameToReset.gameId]))
-replay.games.push(JSON.parse(JSON.stringify(gameData[gameToReset.gameId])));
-  fs.writeFileSync("replay.json", JSON.stringify(replay))
-  gameData[gameToReset.gameId] = {};
-  var energyArr = [];
+  
+    var energyArr = [];
   var winner = gameToReset.bases[0];
   for(var i=0;i<gameToReset.bases.length;i++){
     if(winner.energy < gameToReset.bases[i].energy){
       winner = gameToReset.bases[i];
     }
-energyArr.push(gameToReset.bases[i].energy)
+energyArr.push(gameToReset.bases[i].energy);
    }
    energyArr = energyArr.sort();
    //checking there isn't a tie between players
@@ -205,6 +196,12 @@ energyArr.push(gameToReset.bases[i].energy)
         broadcast("endGame", {"winner": "tie", "gameId": gameToReset.gameId}, sockets[gameToReset.gameId])
      broadcast("endGame", {"winner": "tie", "gameId": gameToReset.gameId}, displays)
    }
+  gameData[gameToReset.gameId].winnerId = winner.id;
+  console.log("Adding to database: " + JSON.stringify(gameData[gameToReset.gameId]))
+replay.games.push(JSON.parse(JSON.stringify(gameData[gameToReset.gameId])));
+  fs.writeFileSync("replay.json", JSON.stringify(replay))
+  gameData[gameToReset.gameId] = {};
+
   
   gameToReset.players.length = 0;
   sockets[gameToReset.gameId].length = 0;
@@ -256,9 +253,9 @@ function startGame(queued) {
   
   
   var loop = setInterval(function() {
-    // console.log("LOOPING" + games[ind].players.length + " should be above zero, algong with " + sockets.length + ", but " + queueSockets.length + " should be zero.")
     if (games[ind].turn == games[ind].totalTurns + PLAYER_NUMBER) {
       broadcast("draw", games, displays);
+     
       
       
       clearInterval(loop)
@@ -274,10 +271,7 @@ function startGame(queued) {
 let posGameData=  games[ind].players[games[ind].idTurn].pos;
       gameData[ind].turns.push(JSON.parse(JSON.stringify(posGameData)));
 
-playerCollide(ind) //checks player collision
 
-      games[ind].myBot = games[ind].players[games[ind].idTurn];
-      games[ind].myBase = games[ind].bases[games[ind].idTurn];
 
 //adding energy to nodes
       if (games[ind].turn % 3 == 0) {
@@ -285,14 +279,24 @@ playerCollide(ind) //checks player collision
           games[ind].nodes[i].energy++;
         }
       }
-      
-      for (var i = 0; i < games[ind].nodes.length; i++) {
+//checking player collision with nodes
+       for (var i = 0; i < games[ind].nodes.length; i++) {
         if (games[ind].players[games[ind].idTurn].pos[1] == games[ind].nodes[i].pos[1] && games[ind].players[games[ind].idTurn].pos[0] == games[ind].nodes[i].pos[0]) {
           games[ind].players[games[ind].idTurn].energy += games[ind].nodes[i].energy;
           games[ind].nodes[i].energy = 0;
         }
       }
-      
+ 
+
+playerCollide(ind) //checks player collision
+checkBase(ind)
+
+
+
+      games[ind].myBot = games[ind].players[games[ind].idTurn];
+      games[ind].myBase = games[ind].bases[games[ind].idTurn];
+
+
       broadcast("draw", games, displays);
       sockets[ind][games[ind].idTurn].emit("update", games[ind]);
 

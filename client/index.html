@@ -6,8 +6,6 @@
 
   <title>Chat Example</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!--<link rel="stylesheet" href="/css/bootstrap.min.css">-->
-  <!--<link rel="stylesheet" href="/css/bootstrap-responsive.min.css">-->
   <style>
     body {
       padding-top: 60px;
@@ -23,7 +21,7 @@
 .slider {
     -webkit-appearance: none;
     width: 100%;
-    background: #d3d3d3;
+    background: #7c7c7c;
     height: 4px;
     outline: none;
     cursor: pointer;
@@ -45,15 +43,28 @@
 
 <body>
 
-  <canvas id="canvas" width="600px" height="600px" style="display: inline-block;"></canvas>
 
-<input type="range" min="0" max="200" value="0" id="time" style = "position: absolute; top: 580px; left: 0px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
+
+<div id = "winner" style = "font-weight: bold; font-size: 150%; background: white;z-index: 2; position: absolute; text-align: center; border: 1px solid; display: none; padding: auto; margin: 100px; ">
+</div>
+
+
+  <canvas id="canvas" width="600px" height="600px" style="position: absolute; z-index: 1;"></canvas>
+  
+
+  
+<button id = "watchlive" style = "position: absolute;top: 0px; left: 610px; display: none;">Watch live games</button>
+<input type="range" min="0" max="200" value="0" id="time" style = "display: none;position: absolute; top: 585px; left: 0px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
+<input id = "speed" type = "range" min = "4" max = "1000" value = "50" style = "position: absolute; top:  600px; left: 0px;float: left;"></input>
 <div style = "position: absolute; top: 630px; border: 1px solid;"id = "names">
   
   
   </div>
 
   <div style="display: none;">
+    <img src = "imgs/onair.png" id = "live"/>
+    
+    
     <img src="imgs/redbackwards.png" id="rednorth" />
     <img src="imgs/redforwards.png" id="redsouth" />
     <img src="imgs/redright.png" id="redeast" />
@@ -88,20 +99,17 @@
     <option value="4">Game 5</option>
 </select>
   </div>
-
-
   <script src="/js/jquery.min.js"></script>
-
-  <!--<script src="/js/bootstrap.min.js"></script>-->
-  <!--<script src="/js/angular.min.js"></script>-->
   <script>
   var rerunObj;
   var lastCoords;
     var barricades = [];
     var socket = io.connect();
+    let winText =  document.getElementById("winner");
     var btn = document.getElementById("create");
     var username = document.getElementById("username");
     var after = document.getElementById("after");
+    var watchlive = document.getElementById("watchlive");
     btn.onclick = function() {
       btn.style.display = "none";
       username.style.display = "none";
@@ -130,12 +138,9 @@
       yellowwest: document.getElementById("yellowwest")
     }
 
-
-
     socket.emit("display");
     var game;
-
-
+    var rollbacking = false;
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d")
     // var map = document.getElementById("map");
@@ -177,30 +182,11 @@ for(let i=0;i<gameToDraw.players.length;i++) {
   if(!(gameToDraw.players[i].dir== "south" || gameToDraw.players[i].dir== "north" ||gameToDraw.players[i].dir== "east" || gameToDraw.players[i].dir== "west"  )){
     gameToDraw.players[i].dir = "south";
   }
-  try{
         ctx.drawImage(playerImgs[gameToDraw.players[i].color + gameToDraw.players[i].dir], gameToDraw.players[i].pos[0] * xSize, gameToDraw.players[i].pos[1] * ySize, xSize, ySize);
-} catch(err){
-  console.log("ERROR    " + gameToDraw.players[i].color + gameToDraw.players[i].dir)
-}
+
     
   }
 
-
-      // ctx.fillRect((x) * xSize, (y) * ySize, xSize, ySize);
-    }
-
-    function update(x, y) {
-      grid[x][y] = "P";
-      str = "";
-      for (let i = 0; i <= size; i++) {
-        for (let j = 0; j <= size; j++) {
-          str += grid[j][i] + " "
-          if (j % (size) == 0) {
-            str += "\n<br>"
-          }
-        }
-      }
-      // map.innerHTML = str;
     }
 
     function bases(game) {
@@ -237,64 +223,92 @@ for(let i=0;i<gameToDraw.players.length;i++) {
       ctx.lineWidth = 1.5;
       ctx.strokeRect((x) * xSize, (y) * ySize, xSize, ySize);
     }
-    var myDir = ["north", "east", "south", "west"];
     var games;
     drawGrid();
       let rerunLoop;
           let ind = 0;
       var time = document.getElementById("time");
+      document.getElementById("speed").oninput = function(){
+ clearInterval(rerunLoop);
+ rerunLoop = setInterval(loop, document.getElementById("speed").value);
+     }
       
-      let tempNum = 0;
-      time.onchange = function(){
-        tempNum = time.value;
-        // ind = time.value;
-        clearInterval(rerunLoop)
-        ind = 0;
+      
+      time.oninput = function() { changeTime(time.value); };
+      function changeTime(newTime, intTime){ //In order to not have to save energy states in the replay.JSON database, for rollbacks I have to start from turn 0 and simulate the game up to where the user wants to rollback to.
+     if(newTime < rerunObj.turns.length-1){
+       winText.style.display = "none";
+       winText.innerHTML = "";
+     }
+     
+     
+        console.log(newTime);
+        clearInterval(rerunLoop);
+        //time.value = tempNum;
         for(var k = 0;k<rerunObj.players.length;k++){
+          clear(rerunObj.players[k].pos[0],rerunObj.players[k].pos[1]);
           rerunObj.players[k].energy = 0;
         }
+        //Setting ind to 0 and setting all bases, node, and player energy to 0 to initiate the simulation.
+         ind = 0;
         for(var i=0;i<rerunObj.map.nodes.length;i++){
           rerunObj.map.nodes[i].energy = 0;
         }
         for(var j=0;j<rerunObj.map.bases.length;j++){
           rerunObj.map.bases[j].energy = 0;
         }
-        for(let i=0;i<time.value;i++){
-          // alert(i + " out of " + time.value)
+        for(let i=0;i<newTime;i++){
           loop(true);
         }
-        
-        ind = tempNum;
-          rerunLoop  = setInterval(function(){loop(false);},50);
+        ind = newTime;
+          rerunLoop  = setInterval(function(){loop(false);},document.getElementById("speed").value);
       }
-      
-  socket.on("rerunGameData", function(data){
-    clearInterval(rerunLoop);
-    rerunObj = data;
-ind = 0;
-    ctx.fillStyle = "white";
+      watchlive.onclick = function(){
+        clearInterval(rerunLoop);
+        ind = 0;
+    ctx.fillStyle = "white"; // clearing canvas
     ctx.fillRect(0,0,600,600);
     drawGrid();
-    time.max = rerunObj.turns.length-1;
-    
-    
-    rerunLoop  = setInterval(loop,50);
-
+    rollbacking = false;
+    winText.style.display = "none";
+    watchlive.style.display = "none";
+    time.style.display = "none";
+    selectGame.style.display = "block";
+      }
+  socket.on("rerunGameData", function(data){
+    winText.style.display = "none";
+    winText.innerHTML = "";
+    selectGame.style.display = "none";
+    rollbacking = true;
+    watchlive.style.display = "block";
+    time.style.display = "block";
+    clearInterval(rerunLoop); //Stops reruns that are currently running to initiate this one.
+    rerunObj = data; //Global variable.
+    ind = 0; //On top of resetting any other games running, we need to set the ind to 0.
+    ctx.fillStyle = "white"; // clearing canvas
+    ctx.fillRect(0,0,600,600);
+    drawGrid();
+    time.max = rerunObj.turns.length-1; //for rollbacking, set the max value of the time slider to the number of turns.
+    rerunLoop  = setInterval(loop,document.getElementById("speed").value); //initiates game rollback.
   })
      function loop(isRerunning) {
       rerunObj.players[ind % rerunObj.players.length].pos = rerunObj.turns[ind];
       
     if(!isRerunning){  
-     if(ind % 7 == 0){
       time.value = ind;
-     }
     }
-      // ind = time.value;
-      
+    
+        if (ind % 3 == 0) {
+        for (var i = 0; i < rerunObj.map.nodes.length; i++) {
+          rerunObj.map.nodes[i].energy++;
+        }
+      }
+    
       checkNodes(rerunObj.players[ind % rerunObj.players.length], rerunObj.map.nodes)
-    checkBase(rerunObj.players,rerunObj.map.bases)
-    checkCollide(rerunObj.players)
-         scoreboard(rerunObj.players, rerunObj.map.bases)
+
+          checkCollide(rerunObj.players)
+                    checkBase(rerunObj.players,rerunObj.map.bases)
+         scoreboard(rerunObj.players, rerunObj.map.bases, (ind - (rerunObj.players.length-1)) +"/" + (rerunObj.turns.length-rerunObj.players.length) )
     nodes(rerunObj.map.nodes)
  
       for (var i = 0; i < rerunObj.map.barricades.length; i++) {
@@ -311,12 +325,7 @@ ind = 0;
         ctx.fillText(rerunObj.map.bases[ind % rerunObj.players.length].energy, rerunObj.map.bases[ind % rerunObj.players.length].pos[0] * xSize, (rerunObj.map.bases[ind % rerunObj.players.length].pos[1] * ySize) + ySize);
     
 
-    
-    if (ind % 3 == 0) {
-        for (var i = 0; i < rerunObj.map.nodes.length; i++) {
-          rerunObj.map.nodes[i].energy++;
-        }
-      }
+
       
 
     if(ind > rerunObj.players.length-1){
@@ -328,6 +337,7 @@ ind = 0;
        ctx.drawImage(playerImgs[rerunObj.players[ind % rerunObj.players.length].color + rerunObj.players[ind % rerunObj.players.length].dir], rerunObj.turns[ind][0] * xSize, rerunObj.turns[ind][1] * ySize, xSize, ySize);
       ind++;
       if(ind >= rerunObj.turns.length){
+        displayWinner(rerunObj.players[rerunObj.winnerId].color,rerunObj.players[rerunObj.winnerId].name,rerunObj.map.bases[rerunObj.winnerId].energy, rerunObj.winnerId);
         clearInterval(rerunLoop);
       }
 }
@@ -341,43 +351,32 @@ ind = 0;
     }
          document.getElementById("names").appendChild(p);
     }    
-   
     })
-    
-    
     socket.on("queue", function(data) {
       games = data;
-      
-      
+      if(!rollbacking){
       for (var i = 0; i < data.length; i++) {
         if (data[i].running) {
-             ctx.fillStyle = "white";
+                       ctx.fillStyle = "white";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       drawGrid();
           game = data[i];
           break;
-        }
         
+        }
+        }
       }
 
-      // if(game.players.length){
-
-      // console.log(game)
-      // try{
-      // clear(game.players[game.idTurn].pos[0],game.players[game.idTurn].pos[1]);
-      // } catch(err){
-      // location.reload();
-      // }
-      // update(game.players[game.players.length-1].pos[0],game.players[game.players.length-1].pos[1]);
-      // }
     })
+    let changeColor = 
    socket.on("endGame", function(obj){
+     if(!rollbacking){
      if(games[parseInt(selectGame.options[selectGame.selectedIndex].value)].gameId == obj.gameId ){
    if(obj.winner == "tie"){
-    // alert("Tie! Nobody wins ;-;");
+
    } else{
     // alert("Yay! Congrats to " + obj.winner.name + " who won with an astounding energy score of " + obj.base.energy + "!");
-     
+displayWinner(obj.winner.color, obj.winner.name, obj.base.energy, obj.winner.id);
    }
    
    for(let i=0;i<games.length;i++){
@@ -386,6 +385,7 @@ ind = 0;
        break;
      }
    }
+     }
      }
      
      
@@ -396,79 +396,47 @@ ind = 0;
      
    })
     socket.on("draw", function(data) {
-      
+      if(!rollbacking){
+        winText.style.display  = "none";
+        winText.innerHTML = "";
  let gameToDraw = data[parseInt(selectGame.options[selectGame.selectedIndex].value)];
-console.log(gameToDraw)
 
-// if(gameToDraw.turn >= gameToDraw.totalTurns){
-//   let tempStr = "";
-//   let tempNum = (parseInt(document.getElementById("names").innerHTML.substring(9,10))  + 1)
-//       let p =  document.createElement("P");
-//     for(var i=0;i<gameToDraw.players.length;i++){
-//       tempStr += tempNum + ". " + gameToDraw.players[i].name + " ";
-//     }
-//     p.innerHTML = tempStr;
-//         p.onclick = function(){
-//           alert(tempNum - 1 )
-//       socket.emit("rerunGame", tempNum - 1  );
-      
-//     }
-    
-//         document.getElementById("names").appendChild(p);
-// }
+
 if(lastCoords != null){
   for (let i = 0; i < gameToDraw.players.length; i++) {
-          try{
+          
           clear(lastCoords.players[i].pos[0], lastCoords.players[i].pos[1]);
-          }
-          catch(err){
-            location.reload();
-          }
+        
         
         }
 }
 
-
-
 lastCoords = gameToDraw;
-// alert(parseInt(selectGame.options[selectGame.selectedIndex]))
-     
 
       if (gameToDraw.running) {
-      
-      
-        scoreboard(gameToDraw.players, gameToDraw.bases)
-        console.log(gameToDraw)
+        time.style.display = "none";
+        scoreboard(gameToDraw.players, gameToDraw.bases,  (gameToDraw.turn-gameToDraw.players.length) + "/" + (gameToDraw.totalTurns))
         nodes(gameToDraw.nodes);
         bases(gameToDraw);
-     
-          // clear(gameToDraw.players[i].pos[1],gameToDraw.players[i].pos[0]);
           show(gameToDraw)
-          
+          ctx.drawImage(document.getElementById("live"),xSize * 9,0,60,ySize);
         }
       
-      //TODO: fix this to do something when a game stops running or isnt' running and is selected
-      else{
-        
-      }
-      // players[i].move();
-      // update(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0]);
-
-
-      // player.dir = myDir[Math.floor(Math.random() * 4)]
-      // show(game.players[game.idTurn].pos[1],game.players[game.idTurn].pos[0], game.idTurn);
-
+     
+}
     })
 
     var selectGame = document.getElementById("selectGame");
     selectGame.onchange = function() {
+      
       ctx.fillStyle = "white";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       drawGrid();
     }
     
-    function scoreboard(players,bases){
-        document.getElementById("scoreboard").innerHTML = "";
+    function scoreboard(players,bases, turnStr){
+        document.getElementById("scoreboard").innerHTML = "Turn: " + turnStr + "<br>";
+        
         for (var i = 0; i < players.length; i++) {
           document.getElementById("scoreboard").innerHTML += "Player" + (i+1) + ": <br> energy: " + players[i].energy + "<br> name: " + players[i].name + "<br> base energy: " + bases[i].energy + "<br> <br> <br> ";
         }
@@ -528,6 +496,12 @@ function checkCollide(players){
       }
 }
     
+    
+    function displayWinner(color,name,baseEnergy, id){
+      winText.style.display = "inline-block";
+     winText.innerHTML = "Winner: <span style = 'color: " +  color +  ";'>" + name + "</span>" + " (Player " + (id+1) +")<br>" + name + " won with an astounding base energy score of " + baseEnergy  +"!" 
+  
+    }
     
   </script>
 </body>
