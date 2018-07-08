@@ -1,22 +1,32 @@
 {
   "8miaaw7bkd4": {
     "username": "hello",
-    "wins": 42,
+    "wins": 63,
     "permName": false
   },
   "7enhdtntk52": {
     "username": "goodbye",
-    "wins": 198,
+    "wins": 270,
     "permName": false
   },
   "efqom7i9jl": {
     "username": "hesby",
-    "wins": 133,
+    "wins": 148,
     "permName": false
   },
   "4alzuznij9f": {
     "username": "JOE",
     "wins": 1,
+    "permName": false
+  },
+  "gm20owcofym": {
+    "username": "",
+    "wins": 0,
+    "permName": false
+  },
+  "mmgmlroxqr": {
+    "username": "b",
+    "wins": 0,
     "permName": false
   }
 }

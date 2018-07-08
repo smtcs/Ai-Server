@@ -13,7 +13,7 @@ var async = require('async');
 var socketio = require('socket.io');
 var express = require('express');
 var app = express();
-const PLAYER_NUMBER = 1; //Should be 4 when in use in classroom!
+const PLAYER_NUMBER = 4; //Should be 4 when in use in classroom!
 
 var games = [];
 var queueSockets = [];
@@ -72,6 +72,7 @@ function Game(gameId) {
   this.turn = 0;
   this.socketIndex;
   let mapNum = Math.floor(Math.random() * maps.length);
+  mapNum = 0;
   this.mapNumber = mapNum;
   this.bases = (JSON.parse(JSON.stringify(maps[mapNum].bases)));
   this.barricades = (JSON.parse(JSON.stringify(maps[mapNum].barricades)));
@@ -186,17 +187,20 @@ function resetGame(gameToReset) {
     }
 energyArr.push(gameToReset.bases[i].energy);
    }
-   energyArr = energyArr.sort();
+   energyArr = energyArr.sort(function (a, b) {  return b - a;  });
    //checking there isn't a tie between players
-   if(energyArr[energyArr.length-1] != energyArr[energyArr.length-2]){
+   if(energyArr[0] != energyArr[1]){
      broadcast("endGame", {"winner":gameToReset.players[winner.id], "base": winner, "gameId": gameToReset.gameId}, sockets[gameToReset.gameId])
      broadcast("endGame", {"winner": gameToReset.players[winner.id], "base": winner, "gameId": gameToReset.gameId}, displays)
     addWin(gameToReset.players[winner.id].name)
+      gameData[gameToReset.gameId].winnerId = winner.id;
    } else{
+       gameData[gameToReset.gameId].winnerId = "tie";
         broadcast("endGame", {"winner": "tie", "gameId": gameToReset.gameId}, sockets[gameToReset.gameId])
      broadcast("endGame", {"winner": "tie", "gameId": gameToReset.gameId}, displays)
    }
-  gameData[gameToReset.gameId].winnerId = winner.id;
+   
+
   console.log("Adding to database: " + JSON.stringify(gameData[gameToReset.gameId]))
 replay.games.push(JSON.parse(JSON.stringify(gameData[gameToReset.gameId])));
   fs.writeFileSync("replay.json", JSON.stringify(replay))
@@ -232,7 +236,6 @@ function startGame(queued) {
   for (var i = 0; i < PLAYER_NUMBER; i++) {
     var oi = queued.shift();
     sockets[ind].push(oi);
-    console.log(oi.playerName)
     games[ind].players.push(new Player(oi.playerName, games[ind].players.length));
   }
 
@@ -249,8 +252,7 @@ function startGame(queued) {
   console.log("before loop starts", games[ind].players[0]);
   gameData[ind].mapNum = games[ind].mapNumber;
   gameData[ind].turns = [];
-  gameData[ind].players = games[ind].players;
-  
+  gameData[ind].players = JSON.parse(JSON.stringify(games[ind].players));
   
   var loop = setInterval(function() {
     if (games[ind].turn == games[ind].totalTurns + PLAYER_NUMBER) {
@@ -378,20 +380,21 @@ function playerCollide(ind){
 
         for (let j = 0; j < games[ind].players.length; j++) {
           if (j != i) {
+            const avg = games[ind].players[i].energy + games[ind].players[j].energy;
+ if ((games[ind].players[j].pos[1] != games[ind].bases[i].pos[1] && games[ind].players[j].pos[0] != games[ind].bases[i].pos[0])) {
             if (games[ind].players[i].pos[1] == games[ind].players[j].pos[1] && games[ind].players[i].pos[0] == games[ind].players[j].pos[0]) {
               if (games[ind].players[i].energy > games[ind].players[j].energy) {
-                games[ind].players[i].energy = Math.ceil((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-                games[ind].players[j].energy = Math.floor((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
+                games[ind].players[i].energy = Math.ceil(avg / 2)
+                games[ind].players[j].energy = Math.floor(avg / 2)
               }
               else if (games[ind].players[i].energy < games[ind].players[j].energy) {
-                games[ind].players[j].energy = Math.ceil((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
-                games[ind].players[i].energy = Math.floor((games[ind].players[i].energy + games[ind].players[j].energy) / 2)
+                games[ind].players[j].energy = Math.ceil(avg / 2)
+                games[ind].players[i].energy = Math.floor(avg / 2)
               }
             }
           }
 
-
         }
-
+        }
       }
 }
