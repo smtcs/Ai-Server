@@ -55,7 +55,7 @@
   
 <button id = "watchlive" style = "position: absolute;top: 0px; left: 610px; display: none;">Watch live games</button>
 <input type="range" min="0" max="200" value="0" id="time" style = "display: none;position: absolute; top: 585px; left: 0px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
-<input id = "speed" type = "range" min = "4" max = "1000" value = "50" style = "position: absolute; top:  600px; left: 0px;float: left;"></input>
+<input id = "speed" type = "range" min = "4" max = "300" value = "254" style = "position: absolute; top:  600px; left: 0px;float: left; display: none;"></input>
 <div style = "position: absolute; top: 630px; border: 1px solid;"id = "names">
   
   
@@ -101,6 +101,7 @@
   </div>
   <script src="/js/jquery.min.js"></script>
   <script>
+  var rerunArrLength = 0;
   var rerunObj;
   var lastCoords;
     var barricades = [];
@@ -114,7 +115,7 @@
       btn.style.display = "none";
       username.style.display = "none";
       var key = Math.random().toString(36).substr(2, 35);
-      after.innerHTML = "Username: " + username.value + "<br>key: " + key;
+      after.innerHTML = "Username: " + username.value + "<br>key: " + key + "<br><br>";
       socket.emit("newPlayer", { "key": key, "username": username.value })
     }
 
@@ -230,7 +231,7 @@ for(let i=0;i<gameToDraw.players.length;i++) {
       var time = document.getElementById("time");
       document.getElementById("speed").oninput = function(){
  clearInterval(rerunLoop);
- rerunLoop = setInterval(loop, document.getElementById("speed").value);
+ rerunLoop =  setInterval(loop,304 - document.getElementById("speed").value);
      }
       
       
@@ -242,7 +243,6 @@ for(let i=0;i<gameToDraw.players.length;i++) {
      }
      
      
-        console.log(newTime);
         clearInterval(rerunLoop);
         //time.value = tempNum;
         for(var k = 0;k<rerunObj.players.length;k++){
@@ -264,7 +264,7 @@ for(let i=0;i<gameToDraw.players.length;i++) {
           loop(true);
         }
         ind = newTime;
-          rerunLoop  = setInterval(function(){loop(false);},document.getElementById("speed").value);
+          rerunLoop  = setInterval(function(){loop(false);}, 304 -  document.getElementById("speed").value);
       
         
       }
@@ -279,7 +279,10 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     watchlive.style.display = "none";
     time.style.display = "none";
     selectGame.style.display = "block";
+    document.getElementById("speed").style.display = "none";
       }
+
+      
   socket.on("rerunGameData", function(data){
     document.documentElement.scrollTop = 0;
     winText.style.display = "none";
@@ -288,15 +291,15 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     rollbacking = true;
     watchlive.style.display = "block";
     time.style.display = "block";
+    document.getElementById("speed").style.display = "block";
     clearInterval(rerunLoop); //Stops reruns that are currently running to initiate this one.
     rerunObj = data; //Global variable.
-    console.log("rerun!!! " + JSON.stringify(rerunObj))
     ind = 0; //On top of resetting any other games running, we need to set the ind to 0.
     ctx.fillStyle = "white"; // clearing canvas
     ctx.fillRect(0,0,600,600);
     drawGrid();
     time.max = rerunObj.turns.length-1; //for rollbacking, set the max value of the time slider to the number of turns.
-    rerunLoop  = setInterval(loop,document.getElementById("speed").value); //initiates game rollback.
+    rerunLoop  = setInterval(loop, 304 - document.getElementById("speed").value); //initiates game rollback.
   })
      function loop(isRerunning) {
       rerunObj.players[ind % rerunObj.players.length].pos = rerunObj.turns[ind];
@@ -366,6 +369,7 @@ for(let i=0;i<gameToDraw.players.length;i++) {
       }
 }
     socket.on("replayNames", function(stringArr){
+      rerunArrLength = JSON.parse(JSON.stringify(stringArr.length));
         let p;
     for(var i=stringArr.length-1;i>=0;i--){
       p = document.createElement("P");
@@ -420,6 +424,18 @@ displayWinner(obj.winner.color, obj.winner.name, obj.base.energy, obj.winner.id)
      
    })
     socket.on("draw", function(data) {
+      // console.log(data)
+      for(let game of data){
+        if(game.turn >= game.totalTurns + game.players.length){
+            let tempStr =  (rerunArrLength+1) + ". "; 
+            for(let i =0;i<game.players.length;i++){
+        tempStr += games[ind].players[i].name + " ";
+        
+      }
+      addGame(tempStr);
+        }
+      }
+      
       if(!rollbacking){
         winText.style.display  = "none";
         winText.innerHTML = "";
@@ -458,8 +474,7 @@ lastCoords = gameToDraw;
     }
     
     function scoreboard(players,bases, turnStr){
-        document.getElementById("scoreboard").innerHTML = "Turn: " + turnStr + "<br>";
-        
+        document.getElementById("scoreboard").innerHTML = "Turn: " + turnStr + "<br><br>";
         for (var i = 0; i < players.length; i++) {
           document.getElementById("scoreboard").innerHTML += "Player" + (i+1) + ": <br> energy: " + players[i].energy + "<br> name: " + players[i].name + "<br> base energy: " + bases[i].energy + "<br> <br> <br> ";
         }
@@ -509,7 +524,6 @@ function checkCollide(players, bases){
         for (let j = 0; j < players.length; j++) {
 
           if (j != i) {
-            console.log(players[j].pos + " and " + bases[i].pos)
    
             if (players[i].pos[1] == players[j].pos[1] && players[i].pos[0] == players[j].pos[0]) {
               const avg = players[i].energy + players[j].energy;
@@ -538,6 +552,18 @@ function checkCollide(players, bases){
       winText.style.display = "inline-block";
      winText.innerHTML = "Winner: <span style = 'color: " +  color +  ";'>" + name + "</span>" + " (Player " + (id+1) +")<br>" + name + " won with an astounding base energy score of " + baseEnergy  +"!" 
     }
+    
+    var globalInstertStr;
+    function addGame(str){ //Adds games to the replay selection when they end.
+      globalInstertStr= str;
+
+          var htmlCommand = 'socket.emit("rerunGame", parseInt(globalInstertStr.substring(0,globalInstertStr.indexOf(".")))-1);'
+let html ="<p onclick = '" + htmlCommand + "'>" +  str + "</p>" ;
+         document.getElementById("names").innerHTML= html + document.getElementById("names").innerHTML;
+      
+      
+    }
+    
     
   </script>
 </body>

@@ -14,6 +14,7 @@ var socketio = require('socket.io');
 var express = require('express');
 var app = express();
 const PLAYER_NUMBER = 4; //Should be 4 when in use in classroom!
+const GAME_SPEED = 50; //Speed unit in milliseconds
 
 var games = [];
 var queueSockets = [];
@@ -72,7 +73,6 @@ function Game(gameId) {
   this.turn = 0;
   this.socketIndex;
   let mapNum = Math.floor(Math.random() * maps.length);
-  mapNum = 0;
   this.mapNumber = mapNum;
   this.bases = (JSON.parse(JSON.stringify(maps[mapNum].bases)));
   this.barricades = (JSON.parse(JSON.stringify(maps[mapNum].barricades)));
@@ -89,8 +89,18 @@ games.push(new Game(games.length));
 io.on('connection', function(socket) {
 // When a new player is registered, add them to the database
     socket.on("newPlayer", function(obj) {
-      data[obj.key] = { username: obj.username, wins: 0, permName: false }
+      var hasUserName = false;
+      for(let player in data){
+        if(data[player].username == obj.username || player == obj.key){
+hasUserName = true;
+        } 
+      }
+      
+      if(!hasUserName){
+                        data[obj.key] = { username: obj.username, wins: 0, permName: false }
       fs.writeFileSync("database.json", JSON.stringify(data, null, 2))
+      }
+
     })
 
     /* @Desc: Takes new direction from player and determines new position
@@ -243,7 +253,7 @@ function startGame(queued) {
   games[ind].idTurn = 0;
   games[ind].turn = 0;
   games[ind].running = true;
-
+  
   console.log("someone connected");
   broadcast("queue", "There are " + games[ind].players.length + " people connencted.", sockets[ind]);
   broadcast("queue", games, displays);
@@ -257,9 +267,6 @@ function startGame(queued) {
   var loop = setInterval(function() {
     if (games[ind].turn == games[ind].totalTurns + PLAYER_NUMBER) {
       broadcast("draw", games, displays);
-     
-      
-      
       clearInterval(loop)
       resetGame(games[ind])
 
@@ -305,7 +312,7 @@ checkBase(ind)
           games[ind].turn++;
     }
     
-  }, 50)
+  }, GAME_SPEED);
 }
 
 function addWin(userName){
