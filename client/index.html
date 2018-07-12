@@ -85,22 +85,34 @@
     <img src="imgs/yellowright.png" id="yelloweast" />
     <img src="imgs/yellowleft.png" id="yellowwest" />
   </div>
-  <div style="float: right;">
+  <div style="position: absolute; top: 100px; left: 75%;">
     <input id="username"></input>
     <button id="create">Create a bot</button>
     <div id="after"></div>
     <div id="scoreboard" style="display: inline-block;">
-    </div>
-    <select id="selectGame">
+      <p id = "turnStr"></p>
+      <select id="selectGame">
   <option value="0">Game 1</option>
   <option value="1">Game 2</option>
   <option value="2">Game 3</option>
   <option value="3">Game 4</option>
     <option value="4">Game 5</option>
 </select>
+<br>
+      <div id = "player0" style = "border: 5px solid; display: inline-block; padding: 5px; border-color: red;"></div>
+ 
+<br>
+<div id = "player1" style = "border: 5px solid; display: inline-block; padding: 5px; border-color: #2172ff; "></div>
+<br>
+<div id= "player2" style = "border: 5px solid; display: inline-block; padding: 5px; border-color: #ffcc00; "></div>
+<br>
+<div id = "player3" style = "border: 5px solid; display: inline-block; padding: 5px; border-color: grey; "></div>
+    </div>
+
   </div>
   <script src="/js/jquery.min.js"></script>
   <script>
+  const key = Math.random().toString(36).substr(2, 35); //"Render" the key immediately so it can't be modified through console.
   var rerunArrLength = 0;
   var rerunObj;
   var lastCoords;
@@ -114,8 +126,7 @@
     btn.onclick = function() {
       btn.style.display = "none";
       username.style.display = "none";
-      var key = Math.random().toString(36).substr(2, 35);
-      after.innerHTML = "Username: " + username.value + "<br>key: " + key + "<br><br>";
+      after.innerHTML = "Note: If another player has the username you entered, your bot will not work.<br>Username: " + username.value + "<br>Bot Key: " + key + "<br><br>";
       socket.emit("newPlayer", { "key": key, "username": username.value })
     }
 
@@ -144,18 +155,10 @@
     var rollbacking = false;
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d")
-    // var map = document.getElementById("map");
     var size = 20;
     var xSize = canvas.width / size;
     var ySize = canvas.height / size;
-    var grid = [];
-    var str = ""
-    for (let i = 0; i <= size; i++) {
-      grid[i] = [];
-      for (let j = 0; j <= size; j++) {
-        grid[i][j] = 0;
-      }
-    }
+
     ctx.fillStyle = "black";
 
     function drawGrid() {
@@ -216,7 +219,6 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     }
 
     function clear(x, y) {
-      grid[x][y] = 0;
       ctx.fillStyle = "white";
       ctx.fillRect(((x) * xSize), ((y) * ySize), xSize, ySize);
       ctx.fillStyle = "black";
@@ -474,9 +476,10 @@ lastCoords = gameToDraw;
     }
     
     function scoreboard(players,bases, turnStr){
-        document.getElementById("scoreboard").innerHTML = "Turn: " + turnStr + "<br><br>";
+        document.getElementById("turnStr").innerHTML = "Turn: " + turnStr;
         for (var i = 0; i < players.length; i++) {
-          document.getElementById("scoreboard").innerHTML += "Player" + (i+1) + ": <br> energy: " + players[i].energy + "<br> name: " + players[i].name + "<br> base energy: " + bases[i].energy + "<br> <br> <br> ";
+          document.getElementById("player" + i).innerHTML = "";
+          document.getElementById("player" + i).innerHTML += "Player" + (i+1) + ": <br> energy: " + players[i].energy + "<br> name: " + players[i].name + "<br> base energy: " + bases[i].energy + "<br> ";
         }
     }
     
