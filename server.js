@@ -15,6 +15,9 @@ var express = require('express');
 var app = express();
 const PLAYER_NUMBER = 4; //Should be 4 when in use in classroom!
 const GAME_SPEED = 50; //Speed unit in milliseconds
+const randomBasePos = true;
+
+
 
 var games = [];
 var queueSockets = [];
@@ -39,24 +42,18 @@ var sockets = [
 ];
 var displays = [];
 var cnt = 0;
-const posses = [ // Initial player positions
-  [1, 1],
-  [18, 1],
-  [18, 18],
-  [1, 18]
-];
 var colors = ["red", "blue", "yellow", "grey"]; // Player colors
 var tempName = "";
 
-class Player { 
-  constructor(name, count) {
+class Player { //Player constructor
+  constructor(name, count, gameId) {
     this.id = count;
     this.color = colors[count]
     this.name = name;
     this.energy = 0;
     this.pos = [];
-    this.pos.push(posses[count][0]);
-    this.pos.push(posses[count][1]);
+    this.pos.push(games[gameId].bases[count].pos[0]);
+    this.pos.push(games[gameId].bases[count].pos[1]);
     this.dir = "";
   }
 }
@@ -74,9 +71,9 @@ function Game(gameId) {
   this.socketIndex;
   let mapNum = Math.floor(Math.random() * maps.length);
   this.mapNumber = mapNum;
-  this.bases = (JSON.parse(JSON.stringify(maps[mapNum].bases)));
   this.barricades = (JSON.parse(JSON.stringify(maps[mapNum].barricades)));
   this.nodes = JSON.parse(JSON.stringify(maps[mapNum].nodes));
+    this.bases = generateBases(this.nodes, this.barricades);
 }
 //create 5 instances of the game function
 games.push(new Game(games.length));
@@ -86,19 +83,26 @@ games.push(new Game(games.length));
 games.push(new Game(games.length));
 
 
-io.on('connection', function(socket) {
-// When a new player is registered, add them to the database
+io.on('connection', function(socket) {// When a new player is registered, add them to the database after checking the same username doesn't exist.
     socket.on("newPlayer", function(obj) {
+      console.log("Player requesting to register! Username: " + obj.username + ", key: " + obj.key)
       var hasUserName = false;
       for(let player in data){
         if(data[player].username == obj.username || player == obj.key){
+          console.log("Registration denied, username exists.")
 hasUserName = true;
         } 
+      }
+      
+      if(obj.username == "" || obj.username === null){
+        hasUserName = true;
+        console.log("Registration denied, username is null.");
       }
       
       if(!hasUserName){
                         data[obj.key] = { username: obj.username, wins: 0, permName: false }
       fs.writeFileSync("database.json", JSON.stringify(data, null, 2))
+      console.log("Registration authorized, user has been added to the database!");
       }
 
     })
@@ -108,11 +112,12 @@ hasUserName = true;
      */
 socket.on("rerunGame", function(num){
   replay.games[num].map = maps[replay.games[num].mapNum];
-  socket.emit("rerunGameData", replay.games[num])
+ 
+  
+  socket.emit("rerunGameData",replay.games[num])
 })
     socket.on("new direction", function(data) {
-
-//checking the turn is still on the player who sent this direction. If it's not, the direction sent is disregarded. 
+//checking the game turn is still on the player who sent this direction. If it's not, the direction sent is disregarded.  
       if (data.id == games[data.gameId].idTurn) {
         //changing the player's position based on the string, also making sure they're not going off the map or into a barricade.
         if (data.dir == "north" && games[data.gameId].players[data.id].pos[1] > 0 && checkCollide(games[data.gameId].players[data.id].pos[0], games[data.gameId].players[data.id].pos[1] - 1, games[data.gameId])) {
@@ -152,8 +157,26 @@ stringArr.push(tempStr);
       }
       }
 
-      broadcast("replayNames", stringArr, displays)
-      broadcast("queue", games, displays);
+ 
+  var mostWins = [];
+for (var player in data) {
+    mostWins.push([data[player].username, data[player].wins  ]);
+    if(mostWins.length >= 19){
+      break;
+    }
+}
+mostWins.sort(function(a, b) {
+    return b[1] - a[1];
+});
+
+
+let leaderBoardStr = "<br>";
+for(let i=0;i<mostWins.length;i++){
+  leaderBoardStr+= (i+1) + ". " +mostWins[i][0] + " (" + mostWins[i][1] + ")<br>";
+}
+  
+      socket.emit("replayNames", {"rerunStr": stringArr, "leaderBoardString": leaderBoardStr})
+      socket.emit("queue", games);
     })
     socket.on("name", function(key) {
       //making sure the key is a key in the database.
@@ -188,7 +211,7 @@ server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function() 
   console.log("Chat server listening at", addr.address + ":" + addr.port);
 });
 function resetGame(gameToReset) {
-  
+
     var energyArr = [];
   var winner = gameToReset.bases[0];
   for(var i=0;i<gameToReset.bases.length;i++){
@@ -211,8 +234,16 @@ energyArr.push(gameToReset.bases[i].energy);
    }
    
 
-  console.log("Adding to database: " + JSON.stringify(gameData[gameToReset.gameId]))
+  console.log("Game " + gameToReset.gameId + " has ended, and player " + winner.id + "(" +gameToReset.players[winner.id].name + ") won! ");
+
+
+
+  console.log("Adding the turn data to the replay database.")
 replay.games.push(JSON.parse(JSON.stringify(gameData[gameToReset.gameId])));
+
+while(replay.games.length >50){
+  replay.games.shift();
+}
   fs.writeFileSync("replay.json", JSON.stringify(replay))
   gameData[gameToReset.gameId] = {};
 
@@ -226,14 +257,10 @@ replay.games.push(JSON.parse(JSON.stringify(gameData[gameToReset.gameId])));
   }
   else {
     gameToReset.running = false;
-    console.log("GAME LENGTH " + gameToReset.players.length)
   }
-  console.log("end of reset", gameToReset.players[0]);
-  console.log(gameData)
 }
 
 function startGame(queued) {
-
   let ind;
 
   for (let i = 0; i < games.length; i++) {
@@ -242,11 +269,15 @@ function startGame(queued) {
       break;
     }
   }
+  
+  
+  console.log("Game " + ind + " starting!");
+  
   games[ind].gameId = ind;
   for (var i = 0; i < PLAYER_NUMBER; i++) {
     var oi = queued.shift();
     sockets[ind].push(oi);
-    games[ind].players.push(new Player(oi.playerName, games[ind].players.length));
+    games[ind].players.push(new Player(oi.playerName, games[ind].players.length, games[ind].gameId));
   }
 
 
@@ -254,15 +285,13 @@ function startGame(queued) {
   games[ind].turn = 0;
   games[ind].running = true;
   
-  console.log("someone connected");
   broadcast("queue", "There are " + games[ind].players.length + " people connencted.", sockets[ind]);
   broadcast("queue", games, displays);
   broadcast("gameStart", games[ind], sockets[ind])
-  console.log("this is posses", posses[i]);
-  console.log("before loop starts", games[ind].players[0]);
   gameData[ind].mapNum = games[ind].mapNumber;
   gameData[ind].turns = [];
   gameData[ind].players = JSON.parse(JSON.stringify(games[ind].players));
+  gameData[ind].bases = JSON.parse(JSON.stringify(games[ind].bases))
   
   var loop = setInterval(function() {
     if (games[ind].turn == games[ind].totalTurns + PLAYER_NUMBER) {
@@ -404,4 +433,41 @@ function playerCollide(ind){
         }
         }
       }
+}
+
+function generateBases(nodes, barricades) {
+
+  let bases = [{ pos: [1, 1], energy: 0, id: 0 }, { pos: [18, 1], energy: 0, id: 1 }, { pos: [1, 18], energy: 0, id: 2 }, { pos: [18, 18], energy: 0, id: 3 }]
+
+
+  if (randomBasePos) {
+    let tempPos = [];
+    let r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+    for(let i=0;i<nodes.length;i++){
+      if(r[0] == nodes[i].pos[0] && r[1] == nodes[i].pos[1]){
+       r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+       i=0;
+      }
+    }
+        for(let i=0;i<barricades.length;i++){
+      if(r[0] == barricades[i][0] && r[1] == barricades[i][1]){
+       r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+       i =0;
+      }
+    }
+    
+    
+    
+    
+    bases[0].pos = r;
+    tempPos = JSON.parse(JSON.stringify(r));
+    tempPos[0] = Math.abs(19 - tempPos[0]);
+    bases[1].pos = JSON.parse(JSON.stringify(tempPos));
+    tempPos[1] = Math.abs(19 - tempPos[1]);
+    bases[2].pos = JSON.parse(JSON.stringify(tempPos));
+    tempPos = JSON.parse(JSON.stringify(r));
+    tempPos[1] = Math.abs(19 - tempPos[1]);
+    bases[3].pos = JSON.parse(JSON.stringify(tempPos));
+  }
+  return bases;
 }
