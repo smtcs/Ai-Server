@@ -53,12 +53,13 @@
       <button id = "saveGame" style = "position: absolute;top: 676px; left: 300px; display: none;">Save this Game</button>
   <button id = "watchlive" style = "position: absolute;top: 676px; left: 150px; display: none; ">Watch live games</button>
 
-<input type="range" min="0" max="200" value="0" id="time" style = "display: none;position: absolute; top: 653px; left: 9px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
-<input id = "speed" type = "range" min = "4" max = "300" value = "254" style = "position: absolute; top:  676px; left: 7px;float: left; display: none;"></input>
+<input type="range" min="0" max="200" value="0" id="time" style = "display: none;position: absolute; top: 676px; left: 9px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
+<input id = "speed" type = "range" min = "4" max = "300" value = "254" style = "position: absolute; top:  699px; left: 7px;float: left; display: none;"></input>
 
   </div>
 
 <h1 style = "position: absolute; top: -10px; left: 40%;">Vindinium</h1>
+<a  target="_blank" style = "font-size: 20px; position: relative; left: 41%;"href = "https://docs.google.com/spreadsheets/d/14E42sKLUmX5AUokzlq_1Aj-xZ-I5DlcrTohz5NM_cjE/edit#gid=0">Documentation</a>
 <div style = "position:absolute; left: 23%;">
   <canvas id="canvas" width="600px" height="600px" style="position: relative; float: left;"></canvas>
   <canvas id = "energyDisplay" width = "20px" height = "600px" style = "position: relative; float: left;"></canvas>
@@ -69,7 +70,8 @@
   <b>Recent Games (Last 50)</b>
     </div>
     <div style = "position: relative;  border: 1px solid; text-align: center;  display: inline-block; vertical-align:top;"id = "saved">
-   <b>   Saved Games</b>
+   <b>   Saved Games</b> <br>
+   <button onclick = "clearSavedGames();">Clear</button>
       </div>
           <div style = "position: relative;  border: 1px solid; text-align: center; display: inline-block; vertical-align:top; "id = "leaderboard">
     <b>  Leaderboard</b>
@@ -103,7 +105,7 @@
     <img src="imgs/yellowleft.png" id="yellowwest" />
   </div>
   <div style="position: absolute; top: 100px; left: 75%;">
-    <input id="username"></input>
+    <input id="username" placeholder = "Username (Less than 30 chars)"></input>
     <button id="create">Create a bot</button>
     <div id="after"></div>
     <div id="scoreboard" style="display: inline-block;">
@@ -128,7 +130,7 @@
   <script src="/js/jquery.min.js"></script>
   <script>
   const key = Math.random().toString(36).substr(2, 35); //"Render" the key immediately so it can't be modified through console.
-  var rerunArrLength = 0;
+  var stringArr;
   var rerunObj;
   var lastCoords;
     var barricades = [];
@@ -140,13 +142,30 @@
     var watchlive = document.getElementById("watchlive");
         var eCanvas = document.getElementById("energyDisplay");
         var saveGame = document.getElementById("saveGame");
+        var replayNames = document.getElementById("names");
+        var gLeaderBoard;
 var eCtx = eCanvas.getContext("2d");
+
+socket.on("reconnect", function(){
+  location.reload();
+})
+
+socket.on("disconnect", function(){
+// alert("Server has disconnected. If it's being restarted, wait until the connection is re-established.");
+})
+
     btn.onclick = function() {
+      if(username.value.length<=30){
       btn.style.display = "none";
       username.style.display = "none";
       after.innerHTML = "Note: If another player has the username you entered, your bot will not work.<br>Username: " + username.value + "<br>Bot Key: " + key + "<br><br>";
       socket.emit("newPlayer", { "key": key, "username": username.value })
+    } else{
+      username.value = "Too long!";
     }
+    }
+    
+    
 
 
     var playerImgs = {
@@ -180,7 +199,6 @@ var eCtx = eCanvas.getContext("2d");
     
     
               if(localStorage.getItem("savedGame1") !== null){
-                console.log("aye1")
                 let gameInd = 1;
       while(localStorage.getItem("savedGame" + gameInd) !== null){
                     addSavedGame(JSON.parse(localStorage.getItem("savedGame" + gameInd)).players, gameInd);
@@ -307,8 +325,6 @@ for(let i=0;i<gameToDraw.players.length;i++) {
         ind = newTime;
           rerunLoop  = setInterval(function(){loop(false);}, 304 -  document.getElementById("speed").value);
       }
-
-      
       saveGame.onclick = function(){
         let gameInd = 1;
       while(localStorage.getItem("savedGame" + gameInd) !== null){
@@ -431,20 +447,11 @@ for(let i=0;i<gameToDraw.players.length;i++) {
       }
       }
 }
-    socket.on("replayNames", function(obj){
-      let stringArr = obj.rerunStr;
-          document.getElementById("leaderboard").innerHTML = document.getElementById("leaderboard").innerHTML + obj.leaderBoardString 
 
-      rerunArrLength = JSON.parse(JSON.stringify(stringArr.length));
-        let p;
-    for(var i=stringArr.length-1;i>=0;i--){
-      p = document.createElement("P");
-    p.innerHTML = i+1 +". " +stringArr[i];
-    p.onclick = function(){
-      socket.emit("rerunGame", parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1);
-    }
-         document.getElementById("names").appendChild(p);
-    }    
+    socket.on("replayNames", function(obj){
+       stringArr = obj.rerunStr;
+       leaderBoard(obj.scoreArray);
+replaySelect(stringArr);    
     })
     socket.on("queue", function(data) {
       games = data;
@@ -464,6 +471,30 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     })
     let changeColor = 
    socket.on("endGame", function(obj){
+for(let i=0;i<gLeaderBoard.length;i++){
+ if(gLeaderBoard[i][0] == obj.winner.name){
+   gLeaderBoard[i][1]+=15;
+   break;
+ }
+}
+ console.log("Game Players: " + games[obj.gameId].players);
+ for(let player of games[obj.gameId].players){
+   if(player.name != obj.winner.name){
+     console.log("loser " + player.name);
+     for(let i=0;i<gLeaderBoard.length;i++){
+       if(player.name == gLeaderBoard[i][0]){
+         console.log("match " +  player.name, gLeaderBoard[i][0])
+         gLeaderBoard[i][1] -=5;
+         
+         if(gLeaderBoard[i][1] < 0){
+           gLeaderBoard[i][1] = 0;
+         }
+       }
+     }
+   }
+ }
+
+leaderBoard(gLeaderBoard);
      if(!rollbacking){
      if(games[parseInt(selectGame.options[selectGame.selectedIndex].value)].gameId == obj.gameId ){
    if(obj.winner == "tie"){
@@ -490,17 +521,22 @@ displayWinner(obj.winner.color, obj.winner.name, obj.base.energy, obj.winner.id)
      
    })
     socket.on("draw", function(data) {
-      // console.log(data)
       for(let game of data){
         if(game.turn >= game.totalTurns + game.players.length){
-            let tempStr =  (rerunArrLength+1) + ". "; 
+                while(stringArr.length > 49){
+        stringArr.shift();
+      }
+            let tempStr = "";
             for(let i =0;i<game.players.length;i++){
         tempStr += games[ind].players[i].name + " ";
         
       }
-      addGame(tempStr);
-      rerunArrLength++;
+
+stringArr.push(tempStr);
+replaySelect(stringArr);
+
         }
+      
       }
       
       if(!rollbacking){
@@ -545,7 +581,7 @@ lastCoords = gameToDraw;
         document.getElementById("turnStr").innerHTML = "Turn: " + turnStr;
         for (var i = 0; i < players.length; i++) {
           document.getElementById("player" + i).innerHTML = "";
-          document.getElementById("player" + i).innerHTML += "Player" + (i+1) + ": <br> energy: " + players[i].energy + "<br> name: " + players[i].name + "<br> base energy: " + bases[i].energy + "<br> ";
+          document.getElementById("player" + i).innerHTML += "Player" + (i+1) + ": <br>name: " + players[i].name + "<br>energy: " + players[i].energy + "<br>base energy: " + bases[i].energy + "<br>ELO: " + players[i].elo;
         }
     }
     
@@ -589,16 +625,15 @@ function checkNodes(player, nodes){
 
 function checkCollide(players, bases){
   for (var i = 0; i < players.length; i++) {
-
         for (let j = 0; j < players.length; j++) {
-
           if (j != i) {
-   
             if (players[i].pos[1] == players[j].pos[1] && players[i].pos[0] == players[j].pos[0]) {
               const avg = players[i].energy + players[j].energy;
+              console.log("average " + avg/2 +" players energy " + players[i].energy + ", " + players[j].energy)
               if (players[i].energy > players[j].energy) {
                 players[i].energy = Math.ceil(avg / 2)
                 players[j].energy = Math.floor(avg / 2)
+                   console.log("average " + avg/2 +" players energy " + players[i].energy + ", " + players[j].energy)
               }
               else if (players[i].energy < players[j].energy) {
                 players[j].energy = Math.ceil(avg / 2)
@@ -621,13 +656,12 @@ function checkCollide(players, bases){
       winText.style.display = "inline-block";
      winText.innerHTML = "Winner: <span style = 'color: " +  color +  ";'>" + name + "</span>" + " (Player " + (id+1) +")<br>" + name + " won with an astounding base energy score of " + baseEnergy  +"!" 
     }
-    
-    var globalInstertStr;
+
     function addGame(str){ //Adds games to the replay selection when they end.
-      globalInstertStr= str;
-          let htmlCommand = 'socket.emit("rerunGame", parseInt(globalInstertStr.substring(0,globalInstertStr.indexOf(".")))-1);'
+          let htmlCommand = 'socket.emit("rerunGame", parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1); console.log(parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1)'
+          
 let html ="<p onclick = '" + htmlCommand + "'>" +  str + "</p>" ;
-         document.getElementById("names").innerHTML= html + document.getElementById("names").innerHTML;
+         replayNames.innerHTML= '<b>Recent Games (Last 50)</b>' + html + replayNames.innerHTML.substring(replayNames.innerHTML.indexOf("</b>") + 4, replayNames.innerHTML.length);
     }
     
     
@@ -651,11 +685,42 @@ eCtx.fillRect(0,drawY,eCanvas.width, ((player.energy + bases[player.id].energy)/
           for(let i=0;i<players.length;i++){
             str+=players[i].name + " ";
           }
-      globalInstertStr = str;
-          var htmlCommand = 'replayGame(JSON.parse(localStorage.getItem("savedGame" + parseInt(globalInstertStr.substring(0,globalInstertStr.indexOf("."))))));';
-          let html ="<p onclick = '" + htmlCommand + "'>" +  str + "</p>" ;
+          var htmlCommand = 'replayGame(JSON.parse(localStorage.getItem("savedGame" + parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf("."))))));';
+          let html ="<p onclick = '" + htmlCommand + "'>" +  str + "</p>";
          document.getElementById("saved").innerHTML= document.getElementById("saved").innerHTML + html;
+    }
+    
+    function clearSavedGames(){
+                    if(localStorage.getItem("savedGame1") !== null){
+                let gameInd = 1;
+      while(localStorage.getItem("savedGame" + gameInd) !== null){
+                   localStorage.removeItem("savedGame" + gameInd);
+        gameInd++;
+      }
+              document.getElementById("saved").innerHTML = '<b>Saved Games</b><br><button onclick = "clearSavedGames();">Clear</button>';
+    }
+      
+    }
+    
+    function leaderBoard(mostWins){
+      gLeaderBoard = mostWins;
+            let leaderBoardStr = "<br>";
+for(let i=0;i<mostWins.length;i++){
+  leaderBoardStr+= (i+1) + ". " +mostWins[i][0] + " (" + mostWins[i][1] + ")<br>";
+}
+      document.getElementById("leaderboard").innerHTML = '<b>Leaderboard</b>' + leaderBoardStr;
+    }
+    
+    function replaySelect(arr){
 
+      replayNames.innerHTML = '<b>Recent Games (Last 50)<b><br>'
+      
+              let p = "";
+    for(var i=arr.length-1;i>=0;i--){
+    p = i+1 +". " +arr[i];
+let htmlCommand = 'console.log(parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1); socket.emit("rerunGame", parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1);'
+         replayNames.innerHTML =  replayNames.innerHTML + "<p onclick = '" + htmlCommand + "'>" + p + "</p>";
+    }
     }
   </script>
 </body>

@@ -5,6 +5,13 @@ git add // Adds changed files to record.  -A will add all files
 git commit -m "message" // commits changes to be pushed
 git push // pushes all changes to github
 */
+
+
+const PLAYER_NUMBER = 4; //Reccomended: 4.Should be 4 when in use in classroom!
+const GAME_SPEED = 50; //Reccomended: 50. Speed unit in milliseconds
+const randomBasePos = true; //If this is true, then the base position for games will be random. No player has an advantage though, since it picks a position and mirrors it.
+const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time. How many turns in a game. One turn is one player playing.
+
 var fs = require("fs")
 var http = require('http');
 var path = require('path');
@@ -13,9 +20,6 @@ var async = require('async');
 var socketio = require('socket.io');
 var express = require('express');
 var app = express();
-const PLAYER_NUMBER = 4; //Should be 4 when in use in classroom!
-const GAME_SPEED = 50; //Speed unit in milliseconds
-const randomBasePos = true;
 
 
 
@@ -24,7 +28,9 @@ var queueSockets = [];
 var gameRunning = false;
 var gameData = [{},{},{},{},{}];
 
-var data = JSON.parse(fs.readFileSync("database.json"));
+var playerData = JSON.parse(fs.readFileSync("playerData.json"));
+
+
 var maps = JSON.parse(fs.readFileSync("maps.json"))
 
 var replay = JSON.parse(fs.readFileSync("replay.json"))
@@ -46,7 +52,7 @@ var colors = ["red", "blue", "yellow", "grey"]; // Player colors
 var tempName = "";
 
 class Player { //Player constructor
-  constructor(name, count, gameId) {
+  constructor(name, count, gameId, elo) {
     this.id = count;
     this.color = colors[count]
     this.name = name;
@@ -54,6 +60,7 @@ class Player { //Player constructor
     this.pos = [];
     this.pos.push(games[gameId].bases[count].pos[0]);
     this.pos.push(games[gameId].bases[count].pos[1]);
+    this.elo = elo;
     this.dir = "";
   }
 }
@@ -61,7 +68,7 @@ class Player { //Player constructor
 
 //Game function
 function Game(gameId) {
-  this.totalTurns = 1000; //This should alawys be a multiple of the player number!
+  this.totalTurns = turnCount; //This should alawys be a multiple of the player number!
   this.running = false;
   this.gameId = gameId;
   this.map = "";
@@ -83,12 +90,13 @@ games.push(new Game(games.length));
 games.push(new Game(games.length));
 
 
+
 io.on('connection', function(socket) {// When a new player is registered, add them to the database after checking the same username doesn't exist.
     socket.on("newPlayer", function(obj) {
       console.log("Player requesting to register! Username: " + obj.username + ", key: " + obj.key)
       var hasUserName = false;
-      for(let player in data){
-        if(data[player].username == obj.username || player == obj.key){
+      for(let player in playerData){
+        if(playerData[player].username == obj.username || player == obj.key){
           console.log("Registration denied, username exists.")
 hasUserName = true;
         } 
@@ -100,9 +108,9 @@ hasUserName = true;
       }
       
       if(!hasUserName){
-                        data[obj.key] = { username: obj.username, wins: 0, permName: false }
-      fs.writeFileSync("database.json", JSON.stringify(data, null, 2))
-      console.log("Registration authorized, user has been added to the database!");
+                        playerData[obj.key] = { username: obj.username, score: 100 }
+      fs.writeFileSync("playerDatabase.json", JSON.stringify(playerData, null, 2))
+      console.log("Registration authorized, user has been added to the playerDatabase!");
       }
 
     })
@@ -159,30 +167,24 @@ stringArr.push(tempStr);
 
  
   var mostWins = [];
-for (var player in data) {
-    mostWins.push([data[player].username, data[player].wins  ]);
-    if(mostWins.length >= 19){
-      break;
-    }
+for (var player in playerData) {
+    mostWins.push([playerData[player].username, playerData[player].score  ]);
 }
 mostWins.sort(function(a, b) {
     return b[1] - a[1];
 });
 
 
-let leaderBoardStr = "<br>";
-for(let i=0;i<mostWins.length;i++){
-  leaderBoardStr+= (i+1) + ". " +mostWins[i][0] + " (" + mostWins[i][1] + ")<br>";
-}
-  
-      socket.emit("replayNames", {"rerunStr": stringArr, "leaderBoardString": leaderBoardStr})
+
+      socket.emit("replayNames", {"rerunStr": stringArr, "scoreArray": mostWins})
       socket.emit("queue", games);
     })
     socket.on("name", function(key) {
       //making sure the key is a key in the database.
       let tempname = checkKey(key);
       if (tempname ) { //tempname is either false if authentification failed, or it is the name that associates with the key.
-        socket.playerName = tempname;
+        socket.playerName = tempname.name;
+        socket.elo = tempname.elo;
         queueSockets.push(socket);
 
         if (queueSockets.length >= PLAYER_NUMBER && !gameRunning) {
@@ -277,7 +279,7 @@ function startGame(queued) {
   for (var i = 0; i < PLAYER_NUMBER; i++) {
     var oi = queued.shift();
     sockets[ind].push(oi);
-    games[ind].players.push(new Player(oi.playerName, games[ind].players.length, games[ind].gameId));
+    games[ind].players.push(new Player(oi.playerName, games[ind].players.length, games[ind].gameId, oi.elo) );
   }
 
 
@@ -302,8 +304,7 @@ function startGame(queued) {
     }
     else {
 
-      games[ind].idTurn = games[ind].turn % games[ind].players.length
-
+      games[ind].idTurn = games[ind].turn % games[ind].players.length;
 
 //Adding position information to add to the database for replays
 let posGameData=  games[ind].players[games[ind].idTurn].pos;
@@ -345,27 +346,38 @@ checkBase(ind)
 }
 
 function addWin(userName){
-for(let thing in data){
-  if(data[thing].username == userName){
-    data[thing].wins++;
-    break;
+for(let thing in playerData){
+  if(playerData[thing].username == userName){
+    playerData[thing].score+= 15;
+  } else{
+    playerData[thing].score -= 5;
+    if(playerData[thing].score < 0){
+      playerData[thing].score = 0;
+    }
   }
 }
 
-    fs.writeFileSync("database.json", JSON.stringify(data, null, 2))
+    fs.writeFileSync("playerData.json", JSON.stringify(playerData, null, 2))
 }
 
 
 
 function checkKey(key) {
-  let arr = Object.keys(data)
+  let arr = Object.keys(playerData)
   for (let i = 0; i < arr.length; i++) {
     if (key == arr[i]) {
+
+      for(let j=0;j<queueSockets.length;j++){
+              if(playerData[key].username == queueSockets[j].playerName){
+                return false;
+              }
+      }
+      
       
       for(let thing in games){
         if(games[thing].players.length > 0){
           for(var j=0;j<games[thing].players.length;j++){
-           if( data[key].username == games[thing].players[j].name){
+           if( playerData[key].username == games[thing].players[j].name){
              return false;
             
            }
@@ -374,7 +386,7 @@ function checkKey(key) {
       }
  
       
-      return data[key].username;
+      return {"name": playerData[key].username, "elo": playerData[key].score};
     }
   }
   return false;
