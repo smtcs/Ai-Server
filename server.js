@@ -5,12 +5,10 @@ git add // Adds changed files to record.  -A will add all files
 git commit -m "message" // commits changes to be pushed
 git push // pushes all changes to github
 */
-
-
 const PLAYER_NUMBER = 4; //Reccomended: 4.Should be 4 when in use in classroom!
-const GAME_SPEED = 50; //Reccomended: 50. Speed unit in milliseconds
-const randomBasePos = true; //If this is true, then the base position for games will be random. No player has an advantage though, since it picks a position and mirrors it.
-const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time. How many turns in a game. One turn is one player playing.
+const GAME_SPEED = 50; //Reccomended: 50 for good game visibility and speed. Speed unit in milliseconds
+const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
+const randomMap = true; //Reccomended: true. This decides whether the map is reandomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from predrawn maps.
 
 var fs = require("fs")
 var http = require('http');
@@ -19,6 +17,7 @@ var PF = require('pathfinding');
 var async = require('async');
 var socketio = require('socket.io');
 var express = require('express');
+var PF = require('pathfinding');
 var app = express();
 
 
@@ -29,7 +28,6 @@ var gameRunning = false;
 var gameData = [{},{},{},{},{}];
 
 var playerData = JSON.parse(fs.readFileSync("playerData.json"));
-
 
 var maps = JSON.parse(fs.readFileSync("maps.json"))
 
@@ -46,6 +44,7 @@ var sockets = [
   [],
   []
 ];
+
 var displays = [];
 var cnt = 0;
 var colors = ["red", "blue", "yellow", "grey"]; // Player colors
@@ -78,9 +77,23 @@ function Game(gameId) {
   this.socketIndex;
   let mapNum = Math.floor(Math.random() * maps.length);
   this.mapNumber = mapNum;
-  this.barricades = (JSON.parse(JSON.stringify(maps[mapNum].barricades)));
-  this.nodes = JSON.parse(JSON.stringify(maps[mapNum].nodes));
-    this.bases = generateBases(this.nodes, this.barricades);
+    this.bases = generateBases();
+  this.barricades = generateBarricades(mapNum, this.bases);
+  
+    if(reachable(this.bases[0].pos, this.bases[1].pos, this.barricades).length <=1 || reachable(this.bases[0].pos, this.bases[3].pos, this.barricades) <=1){
+        let blockArr = reachable(this.bases[0].pos, this.bases[1].pos, []).concat(reachable(this.bases[0].pos, this.bases[3].pos, [])).concat(reachable(this.bases[3].pos, this.bases[2].pos, [])).concat(reachable(this.bases[1].pos, this.bases[2].pos, []));
+    for(let i=0;i<blockArr.length;i++){
+    for(let j=0;j<this.barricades.length;j++){
+if(this.barricades[j][0] == blockArr[i][0] && this.barricades[j][1] == blockArr[i][1]){
+this.barricades.splice(j,1);
+}
+    }
+    }
+  }
+  
+    this.nodes = generateNodes(this.bases, this.barricades, mapNum);
+  //GENERATE NODES, THEN BASES KTHE NBARRICADES. HAVE A SUQARE FROM ALL THE BASES OFMOFO
+  
 }
 //create 5 instances of the game function
 games.push(new Game(games.length));
@@ -88,8 +101,6 @@ games.push(new Game(games.length));
 games.push(new Game(games.length));
 games.push(new Game(games.length));
 games.push(new Game(games.length));
-
-
 
 io.on('connection', function(socket) {// When a new player is registered, add them to the database after checking the same username doesn't exist.
     socket.on("newPlayer", function(obj) {
@@ -106,21 +117,16 @@ hasUserName = true;
         hasUserName = true;
         console.log("Registration denied, username is null.");
       }
-      
       if(!hasUserName){
-                        playerData[obj.key] = { username: obj.username, score: 100 }
-      fs.writeFileSync("playerDatabase.json", JSON.stringify(playerData, null, 2))
+      playerData[obj.key] = { username: obj.username, score: 100 }
+      fs.writeFileSync("playerData.json", JSON.stringify(playerData, null, 2))
       console.log("Registration authorized, user has been added to the playerDatabase!");
       }
-
     })
-
     /* @Desc: Takes new direction from player and determines new position
      * @Params: data{} - dir(srt): direction chosen by player - name(str): name of player sending data
      */
 socket.on("rerunGame", function(num){
-  replay.games[num].map = maps[replay.games[num].mapNum];
- 
   
   socket.emit("rerunGameData",replay.games[num])
 })
@@ -138,7 +144,6 @@ socket.on("rerunGame", function(num){
           games[data.gameId].players[data.id].pos[1]++;
         }
         else if (data.dir == "west" && games[data.gameId].players[data.id].pos[0] > 0 && checkCollide(games[data.gameId].players[data.id].pos[0] - 1, games[data.gameId].players[data.id].pos[1], games[data.gameId])) {
-     
           games[data.gameId].players[data.id].pos[0]--;
         }
         games[data.gameId].players[games[data.gameId].idTurn].dir = data.dir;
@@ -238,12 +243,10 @@ energyArr.push(gameToReset.bases[i].energy);
 
   console.log("Game " + gameToReset.gameId + " has ended, and player " + winner.id + "(" +gameToReset.players[winner.id].name + ") won! ");
 
-
-
-  console.log("Adding the turn data to the replay database.")
+  console.log("Adding the turn data to the replay database.");
 replay.games.push(JSON.parse(JSON.stringify(gameData[gameToReset.gameId])));
 
-while(replay.games.length >50){
+while(replay.games.length > 20){
   replay.games.shift();
 }
   fs.writeFileSync("replay.json", JSON.stringify(replay))
@@ -274,26 +277,25 @@ function startGame(queued) {
   
   
   console.log("Game " + ind + " starting!");
-  
+  console.log("bases " + games[ind].bases);
   games[ind].gameId = ind;
   for (var i = 0; i < PLAYER_NUMBER; i++) {
     var oi = queued.shift();
     sockets[ind].push(oi);
     games[ind].players.push(new Player(oi.playerName, games[ind].players.length, games[ind].gameId, oi.elo) );
   }
-
-
   games[ind].idTurn = 0;
   games[ind].turn = 0;
   games[ind].running = true;
-  
   broadcast("queue", "There are " + games[ind].players.length + " people connencted.", sockets[ind]);
   broadcast("queue", games, displays);
-  broadcast("gameStart", games[ind], sockets[ind])
-  gameData[ind].mapNum = games[ind].mapNumber;
+  broadcast("gameStart", games[ind], sockets[ind]);
   gameData[ind].turns = [];
   gameData[ind].players = JSON.parse(JSON.stringify(games[ind].players));
   gameData[ind].bases = JSON.parse(JSON.stringify(games[ind].bases))
+    gameData[ind].nodes = JSON.parse(JSON.stringify(games[ind].nodes))
+      gameData[ind].barricades = JSON.parse(JSON.stringify(games[ind].barricades))
+  
   
   var loop = setInterval(function() {
     if (games[ind].turn == games[ind].totalTurns + PLAYER_NUMBER) {
@@ -372,8 +374,6 @@ function checkKey(key) {
                 return false;
               }
       }
-      
-      
       for(let thing in games){
         if(games[thing].players.length > 0){
           for(var j=0;j<games[thing].players.length;j++){
@@ -447,39 +447,121 @@ function playerCollide(ind){
       }
 }
 
-function generateBases(nodes, barricades) {
+function generateBases() {
+  let bases = [{ pos: [1, 1], energy: 0, id: 0 }, { pos: [18, 1], energy: 0, id: 1 }, { pos: [1, 18], energy: 0, id: 2 }, { pos: [18, 18], energy: 0, id: 3 }];
+  if (randomMap) {
+        let r =[Math.ceil(Math.random() * 18), Math.ceil(Math.random() * 18)]
+ let arr = mirrorPos(r);
+bases[0].pos = arr[0];
+bases[1].pos = arr[1];
+bases[2].pos = arr[2];
+bases[3].pos = arr[3];
+  }
+  return bases;
+}
 
-  let bases = [{ pos: [1, 1], energy: 0, id: 0 }, { pos: [18, 1], energy: 0, id: 1 }, { pos: [1, 18], energy: 0, id: 2 }, { pos: [18, 18], energy: 0, id: 3 }]
+
+function mirrorPos(initPos){ // given a position, return an array with that position mirroed across all quadrants.
+    let arr = [];
+    arr.push(initPos)
+    let tempPos = JSON.parse(JSON.stringify(initPos));
+    tempPos[0] = Math.abs(19 - tempPos[0]);
+    arr.push(JSON.parse(JSON.stringify(tempPos)));
+    tempPos[1] = Math.abs(19 - tempPos[1]);
+    arr.push(JSON.parse(JSON.stringify(tempPos)));
+    tempPos = JSON.parse(JSON.stringify(initPos));
+    tempPos[1] = Math.abs(19 - tempPos[1]);
+   arr.push(JSON.parse(JSON.stringify(tempPos)));
+  return arr;
+}
+
+function generateNodes(bases, barricades, mapNum){
+  if(!randomMap){
+  return JSON.parse(JSON.stringify(maps[mapNum].nodes));
+  }
+  let nodeNum = (Math.ceil(Math.random() * 4));
+  let nodeArr = [];
+  
+  for(let i=0;i<nodeNum;i++){
+    let tempPos = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+    
+    for(let j=0;j<bases.length;j++){
+      if(tempPos[0] == bases[j][0] && tempPos[1] == bases[j][1]){
+        tempPos = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+        j=0;
+      }
+    }
+    
+        for(let j=0;j<barricades.length;j++){
+      if(tempPos[0] == barricades[j][0] && tempPos[1] == barricades[j][1]){
+        tempPos = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+        j=0;
+      }
+    }
+    
+
+    if(reachable(bases[0].pos, tempPos, barricades).length <=1){
+      i--;
+    } else{
+    
+    
+    
+    
+    
+    let mirrorPoss = mirrorPos(tempPos);
+    nodeArr.push({energy:0,pos:mirrorPoss[0]});
+    nodeArr.push({energy:0,pos:mirrorPoss[1]});
+    nodeArr.push({energy:0,pos:mirrorPoss[2]});
+    nodeArr.push({energy:0,pos:mirrorPoss[3]});
+  }
+  }
+  return nodeArr;
+}
 
 
-  if (randomBasePos) {
-    let tempPos = [];
-    let r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
-    for(let i=0;i<nodes.length;i++){
-      if(r[0] == nodes[i].pos[0] && r[1] == nodes[i].pos[1]){
+function generateBarricades(mapNum, bases){
+  // console.log("bases: " + bases)
+
+  let arr = [];
+  if(!randomMap){
+    return (JSON.parse(JSON.stringify(maps[mapNum].barricades)))
+  }
+    let barricadeNum = (Math.ceil(Math.random() * 20)) + 25;
+for(let j=0;j<barricadeNum;j++){
+        let r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+        for(let i=0;i<bases.length;i++){
+      if(r[0] == bases[i].pos[0] && r[1] == bases[i].pos[1]){
        r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
        i=0;
       }
     }
-        for(let i=0;i<barricades.length;i++){
-      if(r[0] == barricades[i][0] && r[1] == barricades[i][1]){
-       r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
-       i =0;
-      }
+
+      
+    
+    let mirrorPoss = mirrorPos(r)
+    arr.push(mirrorPoss[0])
+    arr.push(mirrorPoss[1])
+    arr.push(mirrorPoss[2])
+    arr.push(mirrorPoss[3])
+}
+
+
+return arr;    
+}
+
+function reachable(pos1, pos2, barricades){
+      var grid = new PF.Grid(20, 20);
+    grid.setWalkableAt(pos1[0], pos1[1], true);
+    grid.setWalkableAt(pos2[0], pos2[1], true);
+    for (let i = 0; i < barricades.length; i++) {
+        grid.setWalkableAt(barricades[i][0],barricades[i][1], false)
     }
-    
-    
-    
-    
-    bases[0].pos = r;
-    tempPos = JSON.parse(JSON.stringify(r));
-    tempPos[0] = Math.abs(19 - tempPos[0]);
-    bases[1].pos = JSON.parse(JSON.stringify(tempPos));
-    tempPos[1] = Math.abs(19 - tempPos[1]);
-    bases[2].pos = JSON.parse(JSON.stringify(tempPos));
-    tempPos = JSON.parse(JSON.stringify(r));
-    tempPos[1] = Math.abs(19 - tempPos[1]);
-    bases[3].pos = JSON.parse(JSON.stringify(tempPos));
-  }
-  return bases;
+       var finder = new PF.AStarFinder();
+    var path = finder.findPath(pos1[0], pos1[1], pos2[0], pos2[1], grid);
+// console.log(path.length < 2)
+return path;
+    // return path.length >1;
+    // .length >1
+  
+    // return false;
 }

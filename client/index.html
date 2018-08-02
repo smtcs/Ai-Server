@@ -50,8 +50,8 @@
 
 
 <div style = "position: absolute; left: 22.5%; top:0px; width: 900px;">
-      <button id = "saveGame" style = "position: absolute;top: 676px; left: 300px; display: none;">Save this Game</button>
-  <button id = "watchlive" style = "position: absolute;top: 676px; left: 150px; display: none; ">Watch live games</button>
+      <button id = "saveGame" style = "position: absolute;top: 699px; left: 300px; display: none;">Save this Game</button>
+  <button id = "watchlive" style = "position: absolute;top: 699px; left: 150px; display: none; ">Watch live games</button>
 
 <input type="range" min="0" max="200" value="0" id="time" style = "display: none;position: absolute; top: 676px; left: 9px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
 <input id = "speed" type = "range" min = "4" max = "300" value = "254" style = "position: absolute; top:  699px; left: 7px;float: left; display: none;"></input>
@@ -65,9 +65,9 @@
   <canvas id = "energyDisplay" width = "20px" height = "600px" style = "position: relative; float: left;"></canvas>
   </div>
 
-<div style = "position: absolute;top: 711px; left: 23%;">
+<div style = "position: absolute;top: 729px; left: 23%;">
 <div style = "position: relative;  border: 1px solid; text-align: center; display: inline-block; vertical-align:top;"id = "names">
-  <b>Recent Games (Last 50)</b>
+  <b>Recent Games (Last 20)</b>
     </div>
     <div style = "position: relative;  border: 1px solid; text-align: center;  display: inline-block; vertical-align:top;"id = "saved">
    <b>   Saved Games</b> <br>
@@ -249,20 +249,14 @@ for(let i=0;i<gameToDraw.players.length;i++) {
   }
 
     }
-
     function bases(game) {
-      ctx.fillStyle = game.players[game.idTurn].color;
-
-      ctx.fillRect(game.bases[game.idTurn].pos[0] * xSize, game.bases[game.idTurn].pos[1] * ySize, xSize, ySize);
-
-      ctx.font = "20px Arial";
-
       for (var i = 0; i < game.bases.length; i++) {
+      ctx.fillStyle = game.players[i].color;
+      ctx.fillRect(game.bases[i].pos[0] * xSize, game.bases[i].pos[1] * ySize, xSize, ySize);
+      ctx.font = "20px Arial";
         ctx.fillStyle = "white"
         ctx.fillText(game.bases[i].energy, game.bases[i].pos[0] * xSize, (game.bases[i].pos[1] * ySize) + ySize);
       }
-
-
     }
 
     function nodes(loopArr) {
@@ -313,8 +307,8 @@ for(let i=0;i<gameToDraw.players.length;i++) {
         }
         //Setting ind to 0 and setting all bases, node, and player energy to 0 to initiate the simulation.
          ind = 0;
-        for(var i=0;i<rerunObj.map.nodes.length;i++){
-          rerunObj.map.nodes[i].energy = 0;
+        for(var i=0;i<rerunObj.nodes.length;i++){
+          rerunObj.nodes[i].energy = 0;
         }
         for(var j=0;j<rerunObj .bases.length;j++){
           rerunObj .bases[j].energy = 0;
@@ -389,12 +383,12 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     }
     
         if (ind % 3 == 0) {
-        for (var i = 0; i < rerunObj.map.nodes.length; i++) {
-          rerunObj.map.nodes[i].energy++;
+        for (var i = 0; i < rerunObj.nodes.length; i++) {
+          rerunObj.nodes[i].energy++;
         }
       }
     
-      checkNodes(rerunObj.players[ind % rerunObj.players.length], rerunObj.map.nodes)
+      checkNodes(rerunObj.players[ind % rerunObj.players.length], rerunObj.nodes)
 
           checkCollide(rerunObj.players, rerunObj .bases)
           checkBase(rerunObj.players,rerunObj .bases)
@@ -405,23 +399,15 @@ for(let i=0;i<gameToDraw.players.length;i++) {
             tempTurn = ind;
           }
          scoreboard(rerunObj.players, rerunObj .bases, (tempTurn) +"/" + (rerunObj.turns.length-rerunObj.players.length) )
-    nodes(rerunObj.map.nodes)
+    nodes(rerunObj.nodes)
  energyCanvas(rerunObj.players, rerunObj.bases)
-      for (var i = 0; i < rerunObj.map.barricades.length; i++) {
+      for (var i = 0; i < rerunObj.barricades.length; i++) {
         ctx.fillStyle = "pink"
-        ctx.fillRect(rerunObj.map.barricades[i][0] * xSize, rerunObj.map.barricades[i][1] * ySize, xSize, ySize)
+        ctx.fillRect(rerunObj.barricades[i][0] * xSize, rerunObj.barricades[i][1] * ySize, xSize, ySize)
         
       }
             if(ind > rerunObj.players.length){
-      for(let i=0;i<rerunObj.players.length;i++){
-      
-      ctx.fillStyle = rerunObj.players[i].color;
-      ctx.fillRect(rerunObj .bases[i].pos[0] * xSize,rerunObj .bases[i].pos[1] * ySize,xSize,ySize)
-       
-      ctx.font = "20px Arial";
-        ctx.fillStyle = "white"
-        ctx.fillText(rerunObj .bases[i].energy, rerunObj .bases[i].pos[0] * xSize, (rerunObj .bases[i].pos[1] * ySize) + ySize);
-}
+bases(rerunObj)
 }
 
       if(rerunObj.players[ind% rerunObj.players.length].dir == "" ||rerunObj.players[ind% rerunObj.players.length].dir == null  ){
@@ -432,9 +418,6 @@ for(let i=0;i<gameToDraw.players.length;i++) {
        ctx.drawImage(playerImgs[rerunObj.players[i].color + rerunObj.players[i].dir], rerunObj.players[i].pos[0] * xSize, rerunObj.players[i].pos[1] * ySize, xSize, ySize);
       }
       }
-      
-      
-      
       
       ind++;
       if(ind >= rerunObj.turns.length){
@@ -469,7 +452,6 @@ replaySelect(stringArr);
       }
 
     })
-    let changeColor = 
    socket.on("endGame", function(obj){
 for(let i=0;i<gLeaderBoard.length;i++){
  if(gLeaderBoard[i][0] == obj.winner.name){
@@ -485,7 +467,6 @@ for(let i=0;i<gLeaderBoard.length;i++){
        if(player.name == gLeaderBoard[i][0]){
          console.log("match " +  player.name, gLeaderBoard[i][0])
          gLeaderBoard[i][1] -=5;
-         
          if(gLeaderBoard[i][1] < 0){
            gLeaderBoard[i][1] = 0;
          }
@@ -523,30 +504,21 @@ displayWinner(obj.winner.color, obj.winner.name, obj.base.energy, obj.winner.id)
     socket.on("draw", function(data) {
       for(let game of data){
         if(game.turn >= game.totalTurns + game.players.length){
-                while(stringArr.length > 49){
+                while(stringArr.length > 19){
         stringArr.shift();
       }
             let tempStr = "";
             for(let i =0;i<game.players.length;i++){
         tempStr += games[ind].players[i].name + " ";
-        
       }
-
 stringArr.push(tempStr);
 replaySelect(stringArr);
-
         }
-      
       }
-      
       if(!rollbacking){
         winText.style.display  = "none";
         winText.innerHTML = "";
  let gameToDraw = data[parseInt(selectGame.options[selectGame.selectedIndex].value)];
-
-
-
-
       if (gameToDraw.running) {
         if(lastCoords != null){
   for (let i = 0; i < gameToDraw.players.length; i++) {
@@ -629,11 +601,9 @@ function checkCollide(players, bases){
           if (j != i) {
             if (players[i].pos[1] == players[j].pos[1] && players[i].pos[0] == players[j].pos[0]) {
               const avg = players[i].energy + players[j].energy;
-              console.log("average " + avg/2 +" players energy " + players[i].energy + ", " + players[j].energy)
               if (players[i].energy > players[j].energy) {
                 players[i].energy = Math.ceil(avg / 2)
                 players[j].energy = Math.floor(avg / 2)
-                   console.log("average " + avg/2 +" players energy " + players[i].energy + ", " + players[j].energy)
               }
               else if (players[i].energy < players[j].energy) {
                 players[j].energy = Math.ceil(avg / 2)
@@ -661,7 +631,7 @@ function checkCollide(players, bases){
           let htmlCommand = 'socket.emit("rerunGame", parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1); console.log(parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1)'
           
 let html ="<p onclick = '" + htmlCommand + "'>" +  str + "</p>" ;
-         replayNames.innerHTML= '<b>Recent Games (Last 50)</b>' + html + replayNames.innerHTML.substring(replayNames.innerHTML.indexOf("</b>") + 4, replayNames.innerHTML.length);
+         replayNames.innerHTML= '<b>Recent Games (Last 20)</b>' + html + replayNames.innerHTML.substring(replayNames.innerHTML.indexOf("</b>") + 4, replayNames.innerHTML.length);
     }
     
     
@@ -713,7 +683,7 @@ for(let i=0;i<mostWins.length;i++){
     
     function replaySelect(arr){
 
-      replayNames.innerHTML = '<b>Recent Games (Last 50)<b><br>'
+      replayNames.innerHTML = '<b>Recent Games (Last 20)<b><br>'
       
               let p = "";
     for(var i=arr.length-1;i>=0;i--){
