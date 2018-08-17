@@ -8,7 +8,7 @@ git push // pushes all changes to github
 const PLAYER_NUMBER = 4; //Reccomended: 4.Should be 4 when in use in classroom!
 const GAME_SPEED = 50; //Reccomended: 50 for good game visibility and speed. Speed unit in milliseconds
 const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
-const randomMap = true; //Reccomended: true. This decides whether the map is reandomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from predrawn maps.
+const randomMap = true; //Reccomended: true. This decides whether the map is reandomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from maps.json, predrawn maps.
 
 var fs = require("fs")
 var http = require('http');
@@ -79,10 +79,9 @@ function Game(gameId) {
   this.mapNumber = mapNum;
     this.bases = generateBases();
   this.barricades = generateBarricades(mapNum, this.bases);
-  
     if(reachable(this.bases[0].pos, this.bases[1].pos, this.barricades).length <=1 || reachable(this.bases[0].pos, this.bases[3].pos, this.barricades) <=1){
-        let blockArr = reachable(this.bases[0].pos, this.bases[1].pos, []).concat(reachable(this.bases[0].pos, this.bases[3].pos, [])).concat(reachable(this.bases[3].pos, this.bases[2].pos, [])).concat(reachable(this.bases[1].pos, this.bases[2].pos, []));
-    for(let i=0;i<blockArr.length;i++){
+        let blockArr = reachable(this.bases[0].pos, this.bases[1].pos, []).concat(reachable(this.bases[1].pos, this.bases[2].pos, [])).concat(reachable(this.bases[2].pos, this.bases[3].pos, [])).concat(reachable(this.bases[3].pos, this.bases[0].pos, []));
+     for(let i=0;i<blockArr.length;i++){
     for(let j=0;j<this.barricades.length;j++){
 if(this.barricades[j][0] == blockArr[i][0] && this.barricades[j][1] == blockArr[i][1]){
 this.barricades.splice(j,1);
@@ -526,7 +525,7 @@ function generateBarricades(mapNum, bases){
   if(!randomMap){
     return (JSON.parse(JSON.stringify(maps[mapNum].barricades)))
   }
-    let barricadeNum = (Math.ceil(Math.random() * 20)) + 25;
+    let barricadeNum = (Math.ceil(Math.random() * 20)) + 30;
 for(let j=0;j<barricadeNum;j++){
         let r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
         for(let i=0;i<bases.length;i++){
@@ -558,10 +557,5 @@ function reachable(pos1, pos2, barricades){
     }
        var finder = new PF.AStarFinder();
     var path = finder.findPath(pos1[0], pos1[1], pos2[0], pos2[1], grid);
-// console.log(path.length < 2)
 return path;
-    // return path.length >1;
-    // .length >1
-  
-    // return false;
 }

@@ -51,6 +51,7 @@
 
 <div style = "position: absolute; left: 22.5%; top:0px; width: 900px;">
       <button id = "saveGame" style = "position: absolute;top: 699px; left: 300px; display: none;">Save this Game</button>
+            <button id = "unsaveGame" style = "position: absolute;top: 699px; left: 300px; display: none;">Unsave this Game</button>
   <button id = "watchlive" style = "position: absolute;top: 699px; left: 150px; display: none; ">Watch live games</button>
 
 <input type="range" min="0" max="200" value="0" id="time" style = "display: none;position: absolute; top: 676px; left: 9px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
@@ -130,6 +131,7 @@
   <script src="/js/jquery.min.js"></script>
   <script>
   const key = Math.random().toString(36).substr(2, 35); //"Render" the key immediately so it can't be modified through console.
+  let savedGameInd;
   var stringArr;
   var rerunObj;
   var lastCoords;
@@ -193,21 +195,13 @@ socket.on("disconnect", function(){
 
     socket.emit("display");
     
-    
-    
-    
-    
-    
               if(localStorage.getItem("savedGame1") !== null){
                 let gameInd = 1;
       while(localStorage.getItem("savedGame" + gameInd) !== null){
                     addSavedGame(JSON.parse(localStorage.getItem("savedGame" + gameInd)).players, gameInd);
         gameInd++;
       }
-
-
       }
-    
     var game;
     var rollbacking = false;
     var canvas = document.getElementById("canvas");
@@ -330,6 +324,7 @@ for(let i=0;i<gameToDraw.players.length;i++) {
       
       watchlive.onclick = function(){
         clearInterval(rerunLoop);
+                document.getElementById("unsaveGame").style.display = "none";
         ind = 0;
     ctx.fillStyle = "white"; // clearing canvas
     ctx.fillRect(0,0,600,600);
@@ -344,10 +339,29 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     selectGame.style.display = "block";
     document.getElementById("speed").style.display = "none";
       }
-
+      document.getElementById("unsaveGame").onclick = function(){
+       document.getElementById("saved").innerHTML = '<b>Saved Games</b><br><button onclick = "clearSavedGames();">Clear</button>';
+       let i=savedGameInd;
+       while(localStorage.getItem("savedGame" + (i+1))!== null){ 
+       localStorage.setItem("savedGame" + (i), localStorage.getItem("savedGame" + (i+1)));
+         i++;
+          }
+        localStorage.removeItem("savedGame" +i);
+          let gameInd = 1;
+          while(localStorage.getItem("savedGame" + gameInd) !== null){
+                addSavedGame(JSON.parse(localStorage.getItem("savedGame" + gameInd)).players, gameInd);
+            gameInd++;
+          }          
+          
+          
+          
+          
+    }
       
   socket.on("rerunGameData", function(data){
     replayGame(data);
+            document.getElementById("unsaveGame").style.display = "none";
+        document.getElementById("saveGame").style.display = "block";
   });
   function replayGame(data){
     document.documentElement.scrollTop = 53;
@@ -550,7 +564,7 @@ lastCoords = gameToDraw;
     }
     
     function scoreboard(players,bases, turnStr){
-        document.getElementById("turnStr").innerHTML = "Turn: " + turnStr;
+        document.getElementById("turnStr").innerHTML = "Turn: <b>" + turnStr + "</b>";
         for (var i = 0; i < players.length; i++) {
           document.getElementById("player" + i).innerHTML = "";
           document.getElementById("player" + i).innerHTML += "Player" + (i+1) + ": <br>name: " + players[i].name + "<br>energy: " + players[i].energy + "<br>base energy: " + bases[i].energy + "<br>ELO: " + players[i].elo;
@@ -655,7 +669,8 @@ eCtx.fillRect(0,drawY,eCanvas.width, ((player.energy + bases[player.id].energy)/
           for(let i=0;i<players.length;i++){
             str+=players[i].name + " ";
           }
-          var htmlCommand = 'replayGame(JSON.parse(localStorage.getItem("savedGame" + parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf("."))))));';
+          
+          var htmlCommand = 'savedGameInd = parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")));replayGame(JSON.parse(localStorage.getItem("savedGame" + savedGameInd)));document.getElementById("unsaveGame").style.display = "block";document.getElementById("saveGame").style.display = "none";';
           let html ="<p onclick = '" + htmlCommand + "'>" +  str + "</p>";
          document.getElementById("saved").innerHTML= document.getElementById("saved").innerHTML + html;
     }
