@@ -50,23 +50,24 @@
 
 
 <div style = "position: absolute; left: 22.5%; top:0px; width: 900px;">
-      <button id = "saveGame" style = "position: absolute;top: 699px; left: 300px; display: none;">Save this Game</button>
-            <button id = "unsaveGame" style = "position: absolute;top: 699px; left: 300px; display: none;">Unsave this Game</button>
-  <button id = "watchlive" style = "position: absolute;top: 699px; left: 150px; display: none; ">Watch live games</button>
+      <button id = "saveGame" style = "position: absolute;top: 723px; left: 300px; display: none;">Save this Game</button>
+            <button id = "unsaveGame" style = "position: absolute;top: 723px; left: 300px; display: none;">Unsave this Game</button>
+  <button id = "watchlive" style = "position: absolute;top: 723px; left: 150px; display: none; ">Watch live games</button>
 
-<input type="range" min="0" max="200" value="0" id="time" style = "display: none;position: absolute; top: 676px; left: 9px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
-<input id = "speed" type = "range" min = "4" max = "300" value = "254" style = "position: absolute; top:  699px; left: 7px;float: left; display: none;"></input>
+<input type="range" min="0" max="200" value="0" id="time" style = "display: none;position: absolute; top: 700px; left: 9px; float: left; width: 600px; padding: 0px; z-index: 100000;" class = "slider"></input>
+<input id = "speed" type = "range" min = "4" max = "300" value = "254" style = "position: absolute; top:  723px; left: 7px;float: left; display: none;"></input>
 
   </div>
 
 <h1 style = "position: absolute; top: -10px; left: 40%;">Vindinium</h1>
-<a  target="_blank" style = "font-size: 20px; position: relative; left: 41%;"href = "https://docs.google.com/spreadsheets/d/14E42sKLUmX5AUokzlq_1Aj-xZ-I5DlcrTohz5NM_cjE/edit#gid=0">Documentation</a>
+<a  target="_blank" style = "font-size: 20px; position: relative; left: 41%;"href = "https://docs.google.com/spreadsheets/d/14E42sKLUmX5AUokzlq_1Aj-xZ-I5DlcrTohz5NM_cjE/edit#gid=0">Documentation</a><br>
+<a  target="_blank" style = "font-size: 20px; position: relative; left: 40%;"href = "https://gorgamite.github.io/JSON/randomProjects/Draw/">Map Making Tool</a>
 <div style = "position:absolute; left: 23%;">
   <canvas id="canvas" width="600px" height="600px" style="position: relative; float: left;"></canvas>
   <canvas id = "energyDisplay" width = "20px" height = "600px" style = "position: relative; float: left;"></canvas>
   </div>
 
-<div style = "position: absolute;top: 729px; left: 23%;">
+<div style = "position: absolute;top: 759px; left: 23%;">
 <div style = "position: relative;  border: 1px solid; text-align: center; display: inline-block; vertical-align:top;"id = "names">
   <b>Recent Games (Last 20)</b>
     </div>
@@ -163,7 +164,7 @@ socket.on("disconnect", function(){
       after.innerHTML = "Note: If another player has the username you entered, your bot will not work.<br>Username: " + username.value + "<br>Bot Key: " + key + "<br><br>";
       socket.emit("newPlayer", { "key": key, "username": username.value })
     } else{
-      username.value = "Too long!";
+      username.value = "Too long, reload and try again!";
     }
     }
     
@@ -338,6 +339,7 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     time.style.display = "none";
     selectGame.style.display = "block";
     document.getElementById("speed").style.display = "none";
+        document.documentElement.scrollTop = 61;
       }
       document.getElementById("unsaveGame").onclick = function(){
        document.getElementById("saved").innerHTML = '<b>Saved Games</b><br><button onclick = "clearSavedGames();">Clear</button>';
@@ -352,10 +354,6 @@ for(let i=0;i<gameToDraw.players.length;i++) {
                 addSavedGame(JSON.parse(localStorage.getItem("savedGame" + gameInd)).players, gameInd);
             gameInd++;
           }          
-          
-          
-          
-          
     }
       
   socket.on("rerunGameData", function(data){
@@ -364,7 +362,7 @@ for(let i=0;i<gameToDraw.players.length;i++) {
         document.getElementById("saveGame").style.display = "block";
   });
   function replayGame(data){
-    document.documentElement.scrollTop = 53;
+    document.documentElement.scrollTop = 61;
     winText.style.display = "none";
     winText.innerHTML = "";
     selectGame.style.display = "none";
@@ -447,7 +445,7 @@ bases(rerunObj)
 
     socket.on("replayNames", function(obj){
        stringArr = obj.rerunStr;
-       leaderBoard(obj.scoreArray);
+       leaderBoard(JSON.parse(obj.scoreArray));
 replaySelect(stringArr);    
     })
     socket.on("queue", function(data) {
@@ -488,6 +486,13 @@ for(let i=0;i<gLeaderBoard.length;i++){
      }
    }
  }
+
+gLeaderBoard.sort(function(a, b) {
+    return b[1] - a[1];
+});
+
+
+console.log("sorterd " + gLeaderBoard)
 
 leaderBoard(gLeaderBoard);
      if(!rollbacking){
@@ -567,7 +572,7 @@ lastCoords = gameToDraw;
         document.getElementById("turnStr").innerHTML = "Turn: <b>" + turnStr + "</b>";
         for (var i = 0; i < players.length; i++) {
           document.getElementById("player" + i).innerHTML = "";
-          document.getElementById("player" + i).innerHTML += "Player" + (i+1) + ": <br>name: " + players[i].name + "<br>energy: " + players[i].energy + "<br>base energy: " + bases[i].energy + "<br>ELO: " + players[i].elo;
+          document.getElementById("player" + i).innerHTML += "Player" + (i+1) + ": <br>name: " + players[i].name + "<br>ELO: " + players[i].elo + "<br>base energy: " + bases[i].energy + "<br>energy: " + players[i].energy;
         }
     }
     

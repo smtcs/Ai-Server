@@ -5,10 +5,10 @@ git add // Adds changed files to record.  -A will add all files
 git commit -m "message" // commits changes to be pushed
 git push // pushes all changes to github
 */
-const PLAYER_NUMBER = 4; //Reccomended: 4.Should be 4 when in use in classroom!
-const GAME_SPEED = 50; //Reccomended: 50 for good game visibility and speed. Speed unit in milliseconds
+const PLAYER_NUMBER = 4; //Keep this as 4.
+const GAME_SPEED = 50; //Reccomended: 50-70 for good game visibility and speed. Speed unit of the game in milliseconds
 const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
-const randomMap = true; //Reccomended: true. This decides whether the map is reandomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from maps.json, predrawn maps.
+const randomMap = true; //Reccomended: true. This decides whether the map is randomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from maps.json, predrawn maps.
 
 var fs = require("fs")
 var http = require('http');
@@ -76,6 +76,7 @@ function Game(gameId) {
   this.turn = 0;
   this.socketIndex;
   let mapNum = Math.floor(Math.random() * maps.length);
+  mapNum = maps.length-1;
   this.mapNumber = mapNum;
     this.bases = generateBases();
   this.barricades = generateBarricades(mapNum, this.bases);
@@ -180,7 +181,7 @@ mostWins.sort(function(a, b) {
 
 
 
-      socket.emit("replayNames", {"rerunStr": stringArr, "scoreArray": mostWins})
+      socket.emit("replayNames", {"rerunStr": stringArr, "scoreArray": JSON.stringify(mostWins)})
       socket.emit("queue", games);
     })
     socket.on("name", function(key) {
