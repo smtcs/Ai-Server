@@ -10,6 +10,7 @@ const GAME_SPEED = 50; //Reccomended: 50-70 for good game visibility and speed. 
 const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
 const randomMap = true; //Reccomended: true. This decides whether the map is randomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from maps.json, predrawn maps.
 
+//Import node modules
 var fs = require("fs")
 var http = require('http');
 var path = require('path');
@@ -26,17 +27,15 @@ var games = [];
 var queueSockets = [];
 var gameRunning = false;
 var gameData = [{},{},{},{},{}];
-
 var playerData = JSON.parse(fs.readFileSync("playerData.json"));
-
 var maps = JSON.parse(fs.readFileSync("maps.json"))
-
 var replay = JSON.parse(fs.readFileSync("replay.json"))
 var router = express();
 var server = http.createServer(router);
 var io = socketio.listen(server);
 
 router.use(express.static(path.resolve(__dirname, 'client')));
+//5 Socket arrays to hold 4 socket connections per game, and there are 5 games max at once
 var sockets = [
   [],
   [],
@@ -48,7 +47,6 @@ var sockets = [
 var displays = [];
 var cnt = 0;
 var colors = ["red", "blue", "yellow", "grey"]; // Player colors
-var tempName = "";
 
 class Player { //Player constructor
   constructor(name, count, gameId, elo) {
@@ -153,7 +151,7 @@ socket.on("rerunGame", function(num){
      
       
     });
-
+//Runs when someone connects to the display website
     socket.on("display", function() {
       displays.push(socket)
       //Sending name data for selection for replaying games

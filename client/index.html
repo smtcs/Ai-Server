@@ -2,9 +2,10 @@
 <html lang="en" ng-app>
 
 <head>
+    <link rel="shortcut icon" href="imgs/favicon.ico" />
   <script src="/socket.io/socket.io.js"></script>
 
-  <title>Chat Example</title>
+  <title>Vindinium</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -339,7 +340,7 @@ for(let i=0;i<gameToDraw.players.length;i++) {
     time.style.display = "none";
     selectGame.style.display = "block";
     document.getElementById("speed").style.display = "none";
-        document.documentElement.scrollTop = 61;
+        document.documentElement.scrollTop = 83;
       }
       document.getElementById("unsaveGame").onclick = function(){
        document.getElementById("saved").innerHTML = '<b>Saved Games</b><br><button onclick = "clearSavedGames();">Clear</button>';
@@ -362,7 +363,7 @@ for(let i=0;i<gameToDraw.players.length;i++) {
         document.getElementById("saveGame").style.display = "block";
   });
   function replayGame(data){
-    document.documentElement.scrollTop = 61;
+    document.documentElement.scrollTop = 83;
     winText.style.display = "none";
     winText.innerHTML = "";
     selectGame.style.display = "none";
