@@ -402,6 +402,10 @@ function checkCollide(x, y, game) {
 }
 
 function checkBase(gameId){
+  let energyStolen = false;
+  let playerInd;
+  let baseInd;
+  let energyGained
         for(var i=0;i<games[gameId].players.length;i++){
         if (games[gameId].players[i].pos[1] == games[gameId].bases[i].pos[1] && games[gameId].players[i].pos[0] == games[gameId].bases[i].pos[0]) {
           games[gameId].bases[i].energy += games[gameId].players[i].energy
@@ -411,13 +415,30 @@ function checkBase(gameId){
           for(var j=0;j<games[gameId].players.length;j++){
             if(j != i){
                         if (games[gameId].players[j].pos[1] == games[gameId].bases[i].pos[1] && games[gameId].players[j].pos[0] == games[gameId].bases[i].pos[0]) {
-   
-          games[gameId].players[j].energy += games[gameId].bases[i].energy
-         games[gameId].bases[i].energy= 0;
+                        
+                        
+                        
+                        
+                          energyStolen = true;
+                          
+  if(games[gameId].bases[i].energy >=1){
+     energyGained = 1; 
+  } else{
+  energyGained  = 0;    
+  }
+         playerInd = j;
+         baseInd = i;
+         
          
         }
           }
           }
+        }
+        
+        if(energyStolen){
+          
+         games[gameId].players[playerInd].energy += energyGained;
+         games[gameId].bases[baseInd].energy-=energyGained;
         }
 }
 
