@@ -5,6 +5,7 @@ git add // Adds changed files to record.  -A will add all files
 git commit -m "message" // commits changes to be pushed
 git push // pushes all changes to github
 */
+
 const PLAYER_NUMBER = 4; //Keep this as 4.
 const GAME_SPEED = 50; //Reccomended: 50-70 for good game visibility and speed. Speed unit of the game in milliseconds
 const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
@@ -46,7 +47,7 @@ var sockets = [
 
 var displays = [];
 var cnt = 0;
-var colors = ["orange", "red", "blue", "green"]; // Player colors
+var colors =["orange", "red", "blue", "green"]; // Player colors
 
 class Player { //Player constructor
   constructor(name, count, gameId, elo) {
@@ -73,8 +74,8 @@ function Game(gameId) {
   this.idTurn = 0;
   this.turn = 0;
   this.socketIndex;
-  let mapNum = Math.floor(Math.random() * maps.length);
-  mapNum = maps.length - 1;
+//  let mapNum = Math.floor(Math.random() * maps.length);
+  let mapNum = 0;
   this.mapNumber = mapNum;
   this.bases = generateBases();
   this.barricades = generateBarricades(mapNum, this.bases);
@@ -150,17 +151,22 @@ io.on('connection', function(socket) { // When a new player is registered, add t
 
 
   });
-  //Runs when someone connects to the display website
+    //Runs when someone connects to the display website
   socket.on("display", function() {
     displays.push(socket)
     //Sending name data for selection for replaying games
     let stringArr = [];
     let tempStr = "";
     for (let thing in replay.games) {
-
       tempStr = "";
       for (let i in replay.games[thing].players) {
-        tempStr += replay.games[thing].players[i].name + " ";
+        tempStr += replay.games[thing].players[i].name + ", ";
+      }
+      tempStr = tempStr.substring(0,tempStr.length-2);
+      if(replay.games[thing].winnerId != "tie"){
+      tempStr += " | Winner: " + replay.games[thing].players[replay.games[thing].winnerId].name;
+      } else{
+         tempStr += " | Winner: Tie"
       }
       if (tempStr.length > 0) {
         stringArr.push(tempStr);
@@ -175,6 +181,7 @@ io.on('connection', function(socket) { // When a new player is registered, add t
     mostWins.sort(function(a, b) {
       return b[1] - a[1];
     });
+
 
 
 
@@ -212,7 +219,7 @@ function broadcast(event, data, arr) {
 
 server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function() {
   var addr = server.address();
-  console.log("Chat server listening at", addr.address + ":" + addr.port);
+  console.log("Server listening at", addr.address + ":" + addr.port);
 });
 
 function resetGame(gameToReset) {
@@ -276,7 +283,6 @@ function startGame(queued) {
 
 
   console.log("Game " + ind + " starting!");
-  console.log("bases " + games[ind].bases);
   games[ind].gameId = ind;
   for (var i = 0; i < PLAYER_NUMBER; i++) {
     var oi = queued.shift();
@@ -288,13 +294,13 @@ function startGame(queued) {
   broadcast("queue", "There are " + games[ind].players.length + " people connencted.", sockets[ind]);
   broadcast("queue", games, displays);
   broadcast("gameStart", games[ind], sockets[ind]);
-  gameData[ind].turns = [];
+ gameData[ind].turns = [];
   gameData[ind].players = JSON.parse(JSON.stringify(games[ind].players));
   gameData[ind].bases = JSON.parse(JSON.stringify(games[ind].bases))
   gameData[ind].nodes = JSON.parse(JSON.stringify(games[ind].nodes))
   gameData[ind].barricades = JSON.parse(JSON.stringify(games[ind].barricades))
-  gameData[ind].teleport = [];
-
+  // gameData[ind].teleport = [];
+  gameData[ind].energy = [];
 
 
   var loop = setInterval(function() {
@@ -312,9 +318,16 @@ function startGame(queued) {
 
       //Adding position information to add to the database for replays
       let posGameData = games[ind].players[games[ind].idTurn].pos;
+      // gameData[ind].turns.push(JSON.parse(JSON.stringify(posGameData)));
+
       gameData[ind].turns.push(JSON.parse(JSON.stringify(posGameData)));
+          
+            let turnData = {"bases": [games[ind].bases[0].energy,games[ind].bases[1].energy,games[ind].bases[2].energy,games[ind].bases[3].energy], 
+      "players":[games[ind].players[0].energy, games[ind].players[1].energy, games[ind].players[2].energy,games[ind].players[3].energy ] }
 
-
+// if(gameData[ind].idTurn == ind % 4){
+      gameData[ind].energy.push(JSON.parse(JSON.stringify(turnData)));
+// }
       //adding energy to nodes
       if (games[ind].turn % 4 == 0) {
         for (var i = 0; i < games[ind].nodes.length; i++) {
@@ -416,19 +429,6 @@ function checkBase(gameId) {
     for (var j = 0; j < games[gameId].players.length; j++) {
       if (j != i) {
         if (games[gameId].players[j].pos[1] == games[gameId].bases[i].pos[1] && games[gameId].players[j].pos[0] == games[gameId].bases[i].pos[0]) {
-
-          if (games[gameId].players[i].pos[0] == games[gameId].players[j].pos[0] && games[gameId].players[i].pos[1] == games[gameId].players[j].pos[1]) {
-            // games[gameId].ex nergy?
-            games[gameId].bases[i].energy += games[gameId].players[j].energy;
-            games[gameId].players[j].energy = 0;
-            games[gameId].players[j].pos[0] = games[gameId].bases[j].pos[0];
-            games[gameId].players[j].pos[1] = games[gameId].bases[j].pos[1];
-            gameData[gameId].teleport.push({ "turn": games[gameId].turn, "player": j, "defended": i });
-            // console.log("Player " + j + " position is " + games[gameId].players[j].pos + " same as their base " + games[gameId].bases[j].pos)
-            console.log("TURN " + games[gameId].turn)
-          }
-          energyStolen = true;
-
           if (games[gameId].bases[i].energy >= 2) {
             
             energyGained = 2;
@@ -437,6 +437,17 @@ function checkBase(gameId) {
           else {
             energyGained = games[gameId].bases[i].energy;
           }
+
+          if (games[gameId].players[i].pos[0] == games[gameId].players[j].pos[0] && games[gameId].players[i].pos[1] == games[gameId].players[j].pos[1]) {
+            games[gameId].bases[i].energy += games[gameId].players[j].energy;
+            games[gameId].players[j].energy = 0;
+            games[gameId].players[j].pos[0] = games[gameId].bases[j].pos[0];
+            games[gameId].players[j].pos[1] = games[gameId].bases[j].pos[1];
+            energyGained = 0;
+          }
+          energyStolen = true;
+
+
           playerInd = j;
           baseInd = i;
 
@@ -459,7 +470,6 @@ function checkBase(gameId) {
 
 function playerCollide(ind) {
   for (var i = 0; i < games[ind].players.length; i++) {
-
     for (let j = 0; j < games[ind].players.length; j++) {
       if (j != i) {
         const avg = games[ind].players[i].energy + games[ind].players[j].energy;
@@ -544,10 +554,6 @@ function generateNodes(bases, barricades, mapNum) {
     }
     else {
 
-
-
-
-
       let mirrorPoss = mirrorPos(tempPos);
       nodeArr.push({ energy: 0, pos: mirrorPoss[0] });
       nodeArr.push({ energy: 0, pos: mirrorPoss[1] });
@@ -558,10 +564,8 @@ function generateNodes(bases, barricades, mapNum) {
   return nodeArr;
 }
 
-
 function generateBarricades(mapNum, bases) {
   // console.log("bases: " + bases)
-
   let arr = [];
   if (!randomMap) {
     return (JSON.parse(JSON.stringify(maps[mapNum].barricades)))

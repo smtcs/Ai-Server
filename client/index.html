@@ -5,11 +5,18 @@
   <link rel="shortcut icon" href="imgs/favicon.ico" />
   <script src="/socket.io/socket.io.js"></script>
 
-  <title>The Hive</title>
+  <title>Hive</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+
     body {
       padding-top: 60px;
+      
+           background-image: linear-gradient(  yellow, orange);
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
     }
 
     canvas {
@@ -135,7 +142,6 @@
     const key = Math.random().toString(36).substr(2, 35); //"Render" the key immediately so it can't be modified through console.
 
 
-
     let savedGameInd;
     var stringArr;
     var rerunObj;
@@ -172,10 +178,6 @@
         username.value = "Too long, reload and try again!";
       }
     }
-
-
-
-
 
     let img = document.getElementById("img");
 
@@ -215,18 +217,10 @@
           ctx.drawImage(img, 5 * 128, 4 * 128, 128, 128, x, y, w, h);
         }
         flap[id] = 0;
-
-
       }
-
-
       ctx.drawImage(img, energyLvl * 128, id * 128, 128, 128, x, y, w, h);
       ctx.drawImage(img, 128, 4 * 128, 128, 128, x, y, w, h)
     }
-
-
-
-
 
 
     socket.emit("display");
@@ -252,8 +246,6 @@
 
     grass();
 
-
-
     function show(gameToDraw) {
 
       for (var i = 0; i < gameToDraw.barricades.length; i++) {
@@ -271,9 +263,7 @@
         drawPlayer(dirs[i], i, 0, gameToDraw.players[i].pos[0] * xSize, gameToDraw.players[i].pos[1] * ySize, xSize, ySize)
         // drawPlayer(dir, id, energyLvl : number, x, y, w, h)
       }
-
     }
-
     function bases(game) {
       for (var i = 0; i < game.bases.length; i++) {
         let EL = 0;
@@ -294,17 +284,6 @@
         // ctx.fillText(game.bases[i].energy, game.bases[i].pos[0] * xSize, (game.bases[i].pos[1] * ySize) + ySize);
       }
     }
-
-    // function nodes(loopArr) {
-    //   for (var i = 0; i < loopArr.length; i++) {
-    //     ctx.fillStyle = "purple";
-    //     ctx.fillRect(loopArr[i].pos[0] * xSize, loopArr[i].pos[1] * ySize, xSize, ySize);
-    //     ctx.font = "20px Arial";
-    //     ctx.fillStyle = "white"
-    //     ctx.fillText(loopArr[i].energy, loopArr[i].pos[0] * xSize, (loopArr[i].pos[1] * ySize) + ySize);
-    //   }
-    // }
-
     function nodes(loopArr) {
       let EL;
       for (var i = 0; i < loopArr.length; i++) {
@@ -317,13 +296,8 @@
         }
 
         ctx.drawImage(img, EL * 128, 5 * 128, 128, 128, loopArr[i].pos[0] * xSize, loopArr[i].pos[1] * ySize, xSize, ySize)
-
-
       }
-
     }
-
-
     var games;
     let rerunLoop;
     let ind = 0;
@@ -341,8 +315,6 @@
         winText.style.display = "none";
         winText.innerHTML = "";
       }
-
-
       clearInterval(rerunLoop);
       //time.value = tempNum;
       for (var k = 0; k < rerunObj.players.length; k++) {
@@ -430,34 +402,35 @@
       rerunLoop = setInterval(loop, 304 - document.getElementById("speed").value); //initiates game rollback.
     }
 
-    function loop(isRerunning) {
+  function loop(isRerunning) {
       if (rerunObj.turns[ind][0] < rerunObj.players[ind % rerunObj.players.length].pos[0]) {
         dirs[ind % rerunObj.players.length] = "west";
       }
       if (rerunObj.turns[ind][0] > rerunObj.players[ind % rerunObj.players.length].pos[0]) {
         dirs[ind % rerunObj.players.length] = "east";
       }
-
-
-
+      
+  
+      
       rerunObj.players[ind % rerunObj.players.length].pos = rerunObj.turns[ind];
+      
+      // for(let i=0;i<rerunObj.nodes.length;i++){
+          // rerunObj.nodes
+      // }
+            for(let i=0;i<rerunObj.bases.length;i++){
+        rerunObj.bases[i].energy = rerunObj.energy[ind].bases[i];
+      }
+      
+            for(let i=0;i<rerunObj.players.length;i++){
+        rerunObj.players[i].energy = rerunObj.energy[ind].players[i];
+      }
+      
+
+      
+
       if (!isRerunning) {
         time.value = ind;
       }
-
-      if (ind % 4 == 0) {
-        for (var i = 0; i < rerunObj.nodes.length; i++) {
-          rerunObj.nodes[i].energy++;
-        }
-      }
-
-
-      checkNodes(rerunObj.players[ind % rerunObj.players.length], rerunObj.nodes);
-
-      checkCollide(rerunObj.players, rerunObj.bases, rerunObj.teleport, ind);
-      checkBase(rerunObj.players, rerunObj.bases);
-      
-      
       
       
       
@@ -467,41 +440,25 @@
       } else {
         tempTurn = ind;
       }
-
-
       if (!isRerunning) {
         grass();
-
-
         scoreboard(rerunObj.players, rerunObj.bases, (tempTurn) + "/" + (rerunObj.turns.length - rerunObj.players.length))
         energyCanvas(rerunObj.players, rerunObj.bases)
       }
-
       nodes(rerunObj.nodes)
-
       if (!isRerunning) {
-
         for (var i = 0; i < rerunObj.barricades.length; i++) {
           ctx.drawImage(img, 2 * 128, 5 * 128, 128, 128, rerunObj.barricades[i][0] * xSize, rerunObj.barricades[i][1] * ySize, xSize, ySize)
-          // ctx.fillStyle = "pink"
-          // ctx.fillRect(rerunObj.barricades[i][0] * xSize, rerunObj.barricades[i][1] * ySize, xSize, ySize)
-
-        }
+ }
       }
       if (ind > rerunObj.players.length) {
         bases(rerunObj)
-
         if (rerunObj.players[ind % rerunObj.players.length].dir == "" || rerunObj.players[ind % rerunObj.players.length].dir == null) {
           rerunObj.players[ind % rerunObj.players.length].dir = "south"
         }
-        // if(rerunObj.players[ind% rerunObj.players.length].dir == "east" || rerunObj.players[ind% rerunObj.players.length].dir =="west"){
-        // dirs[ind% rerunObj.players.length] = rerunObj.players[ind% rerunObj.players.length].dir;
-        // }
         if (ind > rerunObj.players.length) {
           for (let i = 0; i < rerunObj.players.length; i++) {
             drawPlayer(dirs[i], i, 0, rerunObj.players[i].pos[0] * xSize, rerunObj.players[i].pos[1] * ySize, xSize, ySize)
-            //drawPlayer(dir, id, energyLvl, x, y, w, h)
-            // ctx.drawImage(playerImgs[rerunObj.players[i].color + rerunObj.players[i].dir], rerunObj.players[i].pos[0] * xSize, rerunObj.players[i].pos[1] * ySize, xSize, ySize);
           }
         }
       }
@@ -531,14 +488,11 @@
             grass();
             game = data[i];
             break;
-
           }
         }
       }
-
     })
     socket.on("endGame", function(obj) {
-
       for (let i = 0; i < gLeaderBoard.length; i++) {
         if (gLeaderBoard[i][0] == obj.winner.name) {
           gLeaderBoard[i][1] += 15;
@@ -577,6 +531,10 @@
           }
           else {
             displayWinner(obj.winner.color, obj.winner.name, obj.base.energy, obj.winner.id);
+            // console.log("is")
+            // console.log(stringArr);
+            stringArr[stringArr.length-1]+="| Winner: " + obj.winner.name
+             replaySelect(stringArr);
           }
 
           for (let i = 0; i < games.length; i++) {
@@ -589,7 +547,7 @@
       }
 
 
-
+//
 
 
 
@@ -605,8 +563,7 @@
           for (let i = 0; i < game.players.length; i++) {
             tempStr += games[ind].players[i].name + " ";
           }
-          stringArr.push(tempStr);
-          replaySelect(stringArr);
+          stringArr.push(tempStr);                           
 
         }
       }
@@ -655,148 +612,6 @@
         document.getElementById("player" + i).innerHTML += "Player" + (i + 1) + ": <br>name: " + players[i].name + "<br>ELO: " + players[i].elo + "<br>base energy: " + bases[i].energy + "<br>energy: " + players[i].energy;
       }
     }
-
-
-    /*   function checkBase(players, bases){
-        for(var i=0;i<players.length;i++){
-        if (players[i].pos[1] == bases[i].pos[1] && players[i].pos[0] == bases[i].pos[0]) {
-          bases[i].energy += players[i].energy
-          players[i].energy = 0;
-        }
-
-          for(var j=0;j<players.length;j++){
-            if(j != i){
-                        if (players[j].pos[1] == bases[i].pos[1] && players[j].pos[0] == bases[i].pos[0]) {
-   
-          players[j].energy += bases[i].energy
-         bases[i].energy= 0;
-
-
-         
-        }
-          }
-          }
-        }
-}*/
-
-    function checkBase(players, bases) {
-      
-            if (rerunObj.teleport !== undefined) {
-        for (let i = 0; i < rerunObj.teleport.length; i++) {
-          if (rerunObj.teleport[i].turn == ind) {
-            rerunObj.bases[rerunObj.teleport[i].defended].energy += rerunObj.players[rerunObj.teleport[i].player].energy;
-            rerunObj.players[rerunObj.teleport[i].player].energy = 0;
-            // clearInterval(rerunLoop);
-          }
-        }
-      }
-      
-      
-      
-      let energyStolen = false;
-      let playerInd;
-      let baseInd;
-      let energyGained;
-
-      for (var i = 0; i < players.length; i++) {
-        for (var j = 0; j < players.length; j++) {
-          if (j != i) {
-            if (players[j].pos[1] == bases[i].pos[1] && players[j].pos[0] == bases[i].pos[0]) {
-              energyStolen = true;
-
-              if (bases[i].energy >= 2) {
-                
-                 energyGained = 2;
-                
-                            if (rerunObj.teleport !== undefined) {
-        for (let k = 0; k < rerunObj.teleport.length; k++) {
-          if (rerunObj.teleport[k].turn -1 == ind || rerunObj.teleport[k].turn == ind || rerunObj.teleport[k].turn +1== ind || rerunObj.teleport[k].turn +2== ind ||  rerunObj.teleport[k].turn +3== ind  ||rerunObj.teleport[k].turn +4== ind  ) {
-            if(j == rerunObj.teleport[k].player || i == rerunObj.teleport[k].player){
-                energyGained = 0;
-            }
-          }
-        }
-      }
-              }
-              else {
-                energyGained = bases[i].energy;
-              }
-              playerInd = j;
-              baseInd = i;
-            }
-          }
-        }
-        if (players[i].pos[1] == bases[i].pos[1] && players[i].pos[0] == bases[i].pos[0]) {
-          bases[i].energy += players[i].energy
-          players[i].energy = 0;
-        }
-      }
-      if (energyStolen) {
-        players[playerInd].energy += energyGained;
-        bases[baseInd].energy -= energyGained;
-      }
-    }
-
-    function checkNodes(player, nodes) {
-      for (var i = 0; i < nodes.length; i++) {
-        try {
-          if (player.pos[1] == nodes[i].pos[1] && player.pos[0] == nodes[i].pos[0]) {
-            player.energy += nodes[i].energy;
-            nodes[i].energy = 0;
-          }
-        }
-        catch (err) {
-          console.log(err)
-          clearInterval(rerunLoop);
-
-        }
-      }
-    }
-
-
-    function checkCollide(players, bases, teleport, ind) {
-      
-      for (var i = 0; i < players.length; i++) {
-        for (let j = 0; j < players.length; j++) {
-          if (j != i) {
-            
-               let block = false;
-           for(let k=0;k<teleport.length;k++){
-             if(ind == teleport[k].turn || ind == teleport[k].turn + 1 || ind == teleport[k].turn + 2 || ind == teleport[k].turn + 3||ind == teleport[k].turn + 4 ){
-              bases[teleport[i].defended].energy += players[teleport[i].player].energy;
-            players[teleport[i].player].energy = 0;
-               if(teleport[k].player  == i || teleport[k].player  == j){
-block = true;
-               }
-               }
-           }
-            if (players[i].pos[1] == players[j].pos[1] && players[i].pos[0] == players[j].pos[0]) {
-           if(!block){
-              const avg = players[i].energy + players[j].energy;
-              if (players[i].energy > players[j].energy) {
-                players[i].energy = Math.ceil(avg / 2)
-                players[j].energy = Math.floor(avg / 2)
-              }
-              else if (players[i].energy < players[j].energy) {
-                players[j].energy = Math.ceil(avg / 2)
-                players[i].energy = Math.floor(avg / 2)
-
-              }
-            }
-            }
-          }
-        }
-
-
-      }
-
-
-    
-    }
-    
-
-
-
     function displayWinner(color, name, baseEnergy, id) {
       winText.style.display = "inline-block";
       winText.innerHTML = "Winner: <span style = 'color: " + color + ";'>" + name + "</span>" + " (Player " + (id + 1) + ")<br>" + name + " won with an astounding base energy score of " + baseEnergy + "!"
@@ -818,7 +633,6 @@ block = true;
       }
       let drawY = 0;
       for (let player of players) {
-
         eCtx.fillStyle = player.color;
         eCtx.fillRect(0, drawY, eCanvas.width, ((player.energy + bases[player.id].energy) / energySum) * 600);
         drawY += ((player.energy + bases[player.id].energy) / energySum) * 600;
