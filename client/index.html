@@ -8,15 +8,14 @@
   <title>Hive</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-
     body {
       padding-top: 60px;
-      
-           background-image: linear-gradient(  yellow, orange);
-    background-attachment: fixed;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
+
+      background-image: linear-gradient( yellow, orange);
+      background-attachment: fixed;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
     }
 
     canvas {
@@ -69,9 +68,18 @@
   <h1 style="position: absolute; top: -10px; left: 41%;">The Hive</h1>
   <a target="_blank" style="font-size: 20px; position: relative; left: 41%;" href="https://docs.google.com/spreadsheets/d/14E42sKLUmX5AUokzlq_1Aj-xZ-I5DlcrTohz5NM_cjE/edit#gid=0">Documentation</a><br>
   <a target="_blank" style="font-size: 20px; position: relative; left: 40%;" href="https://gorgamite.github.io/JSON/randomProjects/Draw/">Map Making Tool</a>
+
+  <div style="position: absolute; top: 116px; left:50px; float:left;  border: 1px solid; text-align: center; display: inline-block; vertical-align:top; " id="leaderboard">
+    <b>  Leaderboard</b>
+  </div>
+
+
   <div style="position:absolute; left: 23%;">
+
+
     <canvas id="canvas" width="600px" height="600px" style="position: relative; float: left;"></canvas>
     <canvas id="energyDisplay" width="20px" height="600px" style="position: relative; float: left;"></canvas>
+
   </div>
 
   <div style="position: absolute;top: 759px; left: 23%;">
@@ -81,9 +89,6 @@
     <div style="position: relative;  border: 1px solid; text-align: center;  display: inline-block; vertical-align:top;" id="saved">
       <b>   Saved Games</b> <br>
       <button onclick="clearSavedGames();">Clear</button>
-    </div>
-    <div style="position: relative;  border: 1px solid; text-align: center; display: inline-block; vertical-align:top; " id="leaderboard">
-      <b>  Leaderboard</b>
     </div>
   </div>
 
@@ -175,7 +180,7 @@
         socket.emit("newPlayer", { "key": key, "username": username.value })
       }
       else {
-        username.value = "Too long, reload and try again!";
+        username.value = "Too long, try again!";
       }
     }
 
@@ -264,16 +269,17 @@
         // drawPlayer(dir, id, energyLvl : number, x, y, w, h)
       }
     }
+
     function bases(game) {
       for (var i = 0; i < game.bases.length; i++) {
         let EL = 0;
-        if (game.bases[i].energy >= 300) {
+        if (game.bases[i].pollen >= 300) {
           EL += 3;
         }
-        else if (game.bases[i].energy >= 50) {
+        else if (game.bases[i].pollen >= 50) {
           EL += 2;
         }
-        else if (game.bases[i].energy >= 1) {
+        else if (game.bases[i].pollen >= 1) {
           EL += 1;
         }
         ctx.drawImage(img, EL * 128, (6 + i) * 128, 128, 128, game.bases[i].pos[0] * xSize, game.bases[i].pos[1] * ySize, xSize, ySize)
@@ -281,17 +287,19 @@
         // ctx.fillRect(game.bases[i].pos[0] * xSize, game.bases[i].pos[1] * ySize, xSize, ySize);
         // ctx.font = "20px Arial";
         // ctx.fillStyle = "white"
-        // ctx.fillText(game.bases[i].energy, game.bases[i].pos[0] * xSize, (game.bases[i].pos[1] * ySize) + ySize);
+        // ctx.fillText(game.bases[i].pollen, game.bases[i].pos[0] * xSize, (game.bases[i].pos[1] * ySize) + ySize);
       }
     }
+
     function nodes(loopArr) {
+      console.log(loopArr[0])
       let EL;
       for (var i = 0; i < loopArr.length; i++) {
         EL = 3;
-        if (loopArr[i].energy >= 50) {
+        if (loopArr[i].pollen >= 50) {
           EL += 2;
         }
-        else if (loopArr[i].energy >= 10) {
+        else if (loopArr[i].pollen >= 10) {
           EL += 1;
         }
 
@@ -319,17 +327,17 @@
       //time.value = tempNum;
       for (var k = 0; k < rerunObj.players.length; k++) {
         try {
-          rerunObj.players[k].energy = 0;
+          rerunObj.players[k].pollen = 0;
         }
         catch (err) {}
       }
       //Setting ind to 0 and setting all bases, node, and player energy to 0 to initiate the simulation.
       ind = 0;
-      for (var i = 0; i < rerunObj.nodes.length; i++) {
-        rerunObj.nodes[i].energy = 0;
+      for (var i = 0; i < rerunObj.flowers.length; i++) {
+        rerunObj.flowers[i].pollen = 0;
       }
       for (var j = 0; j < rerunObj.bases.length; j++) {
-        rerunObj.bases[j].energy = 0;
+        rerunObj.bases[j].pollen = 0;
       }
       for (let i = 0; i < newTime; i++) {
         loop(true);
@@ -402,42 +410,43 @@
       rerunLoop = setInterval(loop, 304 - document.getElementById("speed").value); //initiates game rollback.
     }
 
-  function loop(isRerunning) {
+    function loop(isRerunning) {
       if (rerunObj.turns[ind][0] < rerunObj.players[ind % rerunObj.players.length].pos[0]) {
         dirs[ind % rerunObj.players.length] = "west";
       }
       if (rerunObj.turns[ind][0] > rerunObj.players[ind % rerunObj.players.length].pos[0]) {
         dirs[ind % rerunObj.players.length] = "east";
       }
-      
-  
-      
-      rerunObj.players[ind % rerunObj.players.length].pos = rerunObj.turns[ind];
-      
-      // for(let i=0;i<rerunObj.nodes.length;i++){
-          // rerunObj.nodes
-      // }
-            for(let i=0;i<rerunObj.bases.length;i++){
-        rerunObj.bases[i].energy = rerunObj.energy[ind].bases[i];
-      }
-      
-            for(let i=0;i<rerunObj.players.length;i++){
-        rerunObj.players[i].energy = rerunObj.energy[ind].players[i];
-      }
-      
 
-      
+
+
+      rerunObj.players[ind % rerunObj.players.length].pos = rerunObj.turns[ind];
+
+      // for(let i=0;i<rerunObj.nodes.length;i++){
+      // rerunObj.nodes
+      // }
+      for (let i = 0; i < rerunObj.bases.length; i++) {
+        rerunObj.bases[i].pollen = rerunObj.pollen[ind].bases[i];
+      }
+
+      for (let i = 0; i < rerunObj.players.length; i++) {
+        rerunObj.players[i].pollen = rerunObj.pollen[ind].players[i];
+      }
+
+
+
 
       if (!isRerunning) {
         time.value = ind;
       }
-      
-      
-      
+
+
+
       let tempTurn = 0;
       if (ind > rerunObj.turns.length - rerunObj.players.length) {
         tempTurn = rerunObj.turns.length - rerunObj.players.length;
-      } else {
+      }
+      else {
         tempTurn = ind;
       }
       if (!isRerunning) {
@@ -445,11 +454,12 @@
         scoreboard(rerunObj.players, rerunObj.bases, (tempTurn) + "/" + (rerunObj.turns.length - rerunObj.players.length))
         energyCanvas(rerunObj.players, rerunObj.bases)
       }
-      nodes(rerunObj.nodes)
+
+      nodes(rerunObj.flowers)
       if (!isRerunning) {
         for (var i = 0; i < rerunObj.barricades.length; i++) {
           ctx.drawImage(img, 2 * 128, 5 * 128, 128, 128, rerunObj.barricades[i][0] * xSize, rerunObj.barricades[i][1] * ySize, xSize, ySize)
- }
+        }
       }
       if (ind > rerunObj.players.length) {
         bases(rerunObj)
@@ -469,7 +479,7 @@
           winText.innerHTML = "Tie!<br>Better luck next time!";
         }
         else {
-          displayWinner(rerunObj.players[rerunObj.winnerId].color, rerunObj.players[rerunObj.winnerId].name, rerunObj.bases[rerunObj.winnerId].energy, rerunObj.winnerId);
+          displayWinner(rerunObj.players[rerunObj.winnerId].color, rerunObj.players[rerunObj.winnerId].name, rerunObj.bases[rerunObj.winnerId].pollen, rerunObj.winnerId);
           clearInterval(rerunLoop);
         }
       }
@@ -530,11 +540,11 @@
             winText.innerHTML = "Tie!<br>Better luck next time!";
           }
           else {
-            displayWinner(obj.winner.color, obj.winner.name, obj.base.energy, obj.winner.id);
+            displayWinner(obj.winner.color, obj.winner.name, obj.base.pollen, obj.winner.id);
             // console.log("is")
             // console.log(stringArr);
-            stringArr[stringArr.length-1]+="| Winner: " + obj.winner.name
-             replaySelect(stringArr);
+            stringArr[stringArr.length - 1] += "| Winner: " + obj.winner.name
+            replaySelect(stringArr);
           }
 
           for (let i = 0; i < games.length; i++) {
@@ -547,7 +557,7 @@
       }
 
 
-//
+      //
 
 
 
@@ -563,7 +573,7 @@
           for (let i = 0; i < game.players.length; i++) {
             tempStr += games[ind].players[i].name + " ";
           }
-          stringArr.push(tempStr);                           
+          stringArr.push(tempStr);
 
         }
       }
@@ -584,7 +594,7 @@
           time.style.display = "none";
           grass();
           scoreboard(gameToDraw.players, gameToDraw.bases, (gameToDraw.turn - gameToDraw.players.length) + "/" + (gameToDraw.totalTurns))
-          nodes(gameToDraw.nodes);
+          nodes(gameToDraw.flowers);
           bases(gameToDraw);
           show(gameToDraw)
           energyCanvas(gameToDraw.players, gameToDraw.bases)
@@ -609,18 +619,21 @@
       document.getElementById("turnStr").innerHTML = "Turn: <b>" + turnStr + "</b>";
       for (var i = 0; i < players.length; i++) {
         document.getElementById("player" + i).innerHTML = "";
-        document.getElementById("player" + i).innerHTML += "Player" + (i + 1) + ": <br>name: " + players[i].name + "<br>ELO: " + players[i].elo + "<br>base energy: " + bases[i].energy + "<br>energy: " + players[i].energy;
+        document.getElementById("player" + i).innerHTML += "Name: " + players[i].name + "<br>ELO: " + players[i].elo + "<br>base honey: " + bases[i].pollen + "<br>pollen: " + players[i].pollen;
+        //        document.getElementById("player" + i).innerHTML += "Player" + (i + 1) + ": <br>name: " + players[i].name + "<br>ELO: " + players[i].elo + "<br>base pollen: " + bases[i].pollen + "<br>energy: " + players[i].pollen;
+
       }
     }
+
     function displayWinner(color, name, baseEnergy, id) {
       winText.style.display = "inline-block";
-      winText.innerHTML = "Winner: <span style = 'color: " + color + ";'>" + name + "</span>" + " (Player " + (id + 1) + ")<br>" + name + " won with an astounding base energy score of " + baseEnergy + "!"
+      winText.innerHTML = "Winner: <span style = 'color: " + color + ";'>" + name + "</span>" + " (Player " + (id + 1) + ")<br>" + name + " won with an astounding base honey score of " + baseEnergy + "!"
     }
 
     function addGame(str) { //Adds games to the replay selection when they end.
       let htmlCommand = 'socket.emit("rerunGame", parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1); console.log(parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1)'
 
-      let html = "<p onclick = '" + htmlCommand + "'>" + str + "</p>";
+      let html = "<p style='cursor:pointer; color:blue; text-decoration:underline;' onclick = '" + htmlCommand + "'>" + str + "</p>";
       replayNames.innerHTML = '<b>Recent Games (Last 20)</b>' + html + replayNames.innerHTML.substring(replayNames.innerHTML.indexOf("</b>") + 4, replayNames.innerHTML.length);
     }
 
@@ -628,14 +641,14 @@
     function energyCanvas(players, bases) {
       let energySum = 0;
       for (let i = 0; i < players.length; i++) {
-        energySum += players[i].energy;
-        energySum += bases[i].energy
+        energySum += players[i].pollen;
+        energySum += bases[i].pollen
       }
       let drawY = 0;
       for (let player of players) {
         eCtx.fillStyle = player.color;
-        eCtx.fillRect(0, drawY, eCanvas.width, ((player.energy + bases[player.id].energy) / energySum) * 600);
-        drawY += ((player.energy + bases[player.id].energy) / energySum) * 600;
+        eCtx.fillRect(0, drawY, eCanvas.width, ((player.pollen + bases[player.id].pollen) / energySum) * 600);
+        drawY += ((player.pollen + bases[player.id].pollen) / energySum) * 600;
       }
     }
 
@@ -646,7 +659,7 @@
       }
 
       var htmlCommand = 'savedGameInd = parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")));replayGame(JSON.parse(localStorage.getItem("savedGame" + savedGameInd)));document.getElementById("unsaveGame").style.display = "block";document.getElementById("saveGame").style.display = "none";';
-      let html = "<p onclick = '" + htmlCommand + "'>" + str + "</p>";
+      let html = "<p style='cursor:pointer; color:blue; text-decoration:underline;' onclick = '" + htmlCommand + "'>" + str + "</p>";
       document.getElementById("saved").innerHTML = document.getElementById("saved").innerHTML + html;
     }
 
@@ -679,7 +692,7 @@
       for (var i = arr.length - 1; i >= 0; i--) {
         p = i + 1 + ". " + arr[i];
         let htmlCommand = 'console.log(parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1); socket.emit("rerunGame", parseInt(this.innerHTML.substring(0,this.innerHTML.indexOf(".")))-1);'
-        replayNames.innerHTML = replayNames.innerHTML + "<p onclick = '" + htmlCommand + "'>" + p + "</p>";
+        replayNames.innerHTML = replayNames.innerHTML + "<p style='cursor:pointer; color:blue; text-decoration:underline;' onclick = '" + htmlCommand + "'>" + p + "</p>";
       }
     }
 

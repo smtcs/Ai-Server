@@ -47,14 +47,14 @@ var sockets = [
 
 var displays = [];
 var cnt = 0;
-var colors =["orange", "red", "blue", "green"]; // Player colors
+var colors = ["orange", "red", "blue", "green"]; // Player colors
 
 class Player { //Player constructor
   constructor(name, count, gameId, elo) {
     this.id = count;
     this.color = colors[count]
     this.name = name;
-    this.energy = 0;
+    this.pollen = 0;
     this.pos = [];
     this.pos.push(games[gameId].bases[count].pos[0]);
     this.pos.push(games[gameId].bases[count].pos[1]);
@@ -74,7 +74,7 @@ function Game(gameId) {
   this.idTurn = 0;
   this.turn = 0;
   this.socketIndex;
-//  let mapNum = Math.floor(Math.random() * maps.length);
+  //  let mapNum = Math.floor(Math.random() * maps.length);
   let mapNum = 0;
   this.mapNumber = mapNum;
   this.bases = generateBases();
@@ -90,7 +90,7 @@ function Game(gameId) {
     }
   }
 
-  this.nodes = generateNodes(this.bases, this.barricades, mapNum);
+  this.flowers = generateNodes(this.bases, this.barricades, mapNum);
   //GENERATE NODES, THEN BASES KTHE NBARRICADES. HAVE A SUQARE FROM ALL THE BASES OFMOFO
 
 }
@@ -151,7 +151,7 @@ io.on('connection', function(socket) { // When a new player is registered, add t
 
 
   });
-    //Runs when someone connects to the display website
+  //Runs when someone connects to the display website
   socket.on("display", function() {
     displays.push(socket)
     //Sending name data for selection for replaying games
@@ -162,11 +162,12 @@ io.on('connection', function(socket) { // When a new player is registered, add t
       for (let i in replay.games[thing].players) {
         tempStr += replay.games[thing].players[i].name + ", ";
       }
-      tempStr = tempStr.substring(0,tempStr.length-2);
-      if(replay.games[thing].winnerId != "tie"){
-      tempStr += " | Winner: " + replay.games[thing].players[replay.games[thing].winnerId].name;
-      } else{
-         tempStr += " | Winner: Tie"
+      tempStr = tempStr.substring(0, tempStr.length - 2);
+      if (replay.games[thing].winnerId != "tie") {
+        tempStr += " | Winner: " + replay.games[thing].players[replay.games[thing].winnerId].name;
+      }
+      else {
+        tempStr += " | Winner: Tie"
       }
       if (tempStr.length > 0) {
         stringArr.push(tempStr);
@@ -227,10 +228,10 @@ function resetGame(gameToReset) {
   var energyArr = [];
   var winner = gameToReset.bases[0];
   for (var i = 0; i < gameToReset.bases.length; i++) {
-    if (winner.energy < gameToReset.bases[i].energy) {
+    if (winner.pollen < gameToReset.bases[i].pollen) {
       winner = gameToReset.bases[i];
     }
-    energyArr.push(gameToReset.bases[i].energy);
+    energyArr.push(gameToReset.bases[i].pollen);
   }
   energyArr = energyArr.sort(function(a, b) { return b - a; });
   //checking there isn't a tie between players
@@ -294,13 +295,13 @@ function startGame(queued) {
   broadcast("queue", "There are " + games[ind].players.length + " people connencted.", sockets[ind]);
   broadcast("queue", games, displays);
   broadcast("gameStart", games[ind], sockets[ind]);
- gameData[ind].turns = [];
+  gameData[ind].turns = [];
   gameData[ind].players = JSON.parse(JSON.stringify(games[ind].players));
   gameData[ind].bases = JSON.parse(JSON.stringify(games[ind].bases))
-  gameData[ind].nodes = JSON.parse(JSON.stringify(games[ind].nodes))
+  gameData[ind].flowers = JSON.parse(JSON.stringify(games[ind].flowers))
   gameData[ind].barricades = JSON.parse(JSON.stringify(games[ind].barricades))
   // gameData[ind].teleport = [];
-  gameData[ind].energy = [];
+  gameData[ind].pollen = [];
 
 
   var loop = setInterval(function() {
@@ -321,25 +322,27 @@ function startGame(queued) {
       // gameData[ind].turns.push(JSON.parse(JSON.stringify(posGameData)));
 
       gameData[ind].turns.push(JSON.parse(JSON.stringify(posGameData)));
-          
-            let turnData = {"bases": [games[ind].bases[0].energy,games[ind].bases[1].energy,games[ind].bases[2].energy,games[ind].bases[3].energy], 
-      "players":[games[ind].players[0].energy, games[ind].players[1].energy, games[ind].players[2].energy,games[ind].players[3].energy ] }
 
-// if(gameData[ind].idTurn == ind % 4){
-      gameData[ind].energy.push(JSON.parse(JSON.stringify(turnData)));
-// }
+      let turnData = {
+        "bases": [games[ind].bases[0].pollen, games[ind].bases[1].pollen, games[ind].bases[2].pollen, games[ind].bases[3].pollen],
+        "players": [games[ind].players[0].pollen, games[ind].players[1].pollen, games[ind].players[2].pollen, games[ind].players[3].pollen]
+      }
+
+      // if(gameData[ind].idTurn == ind % 4){
+      gameData[ind].pollen.push(JSON.parse(JSON.stringify(turnData)));
+      // }
       //adding energy to nodes
       if (games[ind].turn % 4 == 0) {
-        for (var i = 0; i < games[ind].nodes.length; i++) {
-          games[ind].nodes[i].energy++;
+        for (var i = 0; i < games[ind].flowers.length; i++) {
+          games[ind].flowers[i].pollen++;
         }
       }
 
       //checking player collision with nodes
-      for (var i = 0; i < games[ind].nodes.length; i++) {
-        if (games[ind].players[games[ind].idTurn].pos[1] == games[ind].nodes[i].pos[1] && games[ind].players[games[ind].idTurn].pos[0] == games[ind].nodes[i].pos[0]) {
-          games[ind].players[games[ind].idTurn].energy += games[ind].nodes[i].energy;
-          games[ind].nodes[i].energy = 0;
+      for (var i = 0; i < games[ind].flowers.length; i++) {
+        if (games[ind].players[games[ind].idTurn].pos[1] == games[ind].flowers[i].pos[1] && games[ind].players[games[ind].idTurn].pos[0] == games[ind].flowers[i].pos[0]) {
+          games[ind].players[games[ind].idTurn].pollen += games[ind].flowers[i].pollen;
+          games[ind].flowers[i].pollen = 0;
         }
       }
 
@@ -429,18 +432,18 @@ function checkBase(gameId) {
     for (var j = 0; j < games[gameId].players.length; j++) {
       if (j != i) {
         if (games[gameId].players[j].pos[1] == games[gameId].bases[i].pos[1] && games[gameId].players[j].pos[0] == games[gameId].bases[i].pos[0]) {
-          if (games[gameId].bases[i].energy >= 2) {
-            
+          if (games[gameId].bases[i].pollen >= 2) {
+
             energyGained = 2;
-            
+
           }
           else {
-            energyGained = games[gameId].bases[i].energy;
+            energyGained = games[gameId].bases[i].pollen;
           }
 
           if (games[gameId].players[i].pos[0] == games[gameId].players[j].pos[0] && games[gameId].players[i].pos[1] == games[gameId].players[j].pos[1]) {
-            games[gameId].bases[i].energy += games[gameId].players[j].energy;
-            games[gameId].players[j].energy = 0;
+            games[gameId].bases[i].pollen += games[gameId].players[j].pollen;
+            games[gameId].players[j].pollen = 0;
             games[gameId].players[j].pos[0] = games[gameId].bases[j].pos[0];
             games[gameId].players[j].pos[1] = games[gameId].bases[j].pos[1];
             energyGained = 0;
@@ -456,15 +459,15 @@ function checkBase(gameId) {
       }
     }
     if (games[gameId].players[i].pos[1] == games[gameId].bases[i].pos[1] && games[gameId].players[i].pos[0] == games[gameId].bases[i].pos[0]) {
-      games[gameId].bases[i].energy += games[gameId].players[i].energy
-      games[gameId].players[i].energy = 0;
+      games[gameId].bases[i].pollen += games[gameId].players[i].pollen
+      games[gameId].players[i].pollen = 0;
     }
   }
 
   if (energyStolen) {
 
-    games[gameId].players[playerInd].energy += energyGained;
-    games[gameId].bases[baseInd].energy -= energyGained;
+    games[gameId].players[playerInd].pollen += energyGained;
+    games[gameId].bases[baseInd].pollen -= energyGained;
   }
 }
 
@@ -472,16 +475,16 @@ function playerCollide(ind) {
   for (var i = 0; i < games[ind].players.length; i++) {
     for (let j = 0; j < games[ind].players.length; j++) {
       if (j != i) {
-        const avg = games[ind].players[i].energy + games[ind].players[j].energy;
+        const avg = games[ind].players[i].pollen + games[ind].players[j].pollen;
         if ((games[ind].players[j].pos[1] != games[ind].bases[i].pos[1] && games[ind].players[j].pos[0] != games[ind].bases[i].pos[0])) {
           if (games[ind].players[i].pos[1] == games[ind].players[j].pos[1] && games[ind].players[i].pos[0] == games[ind].players[j].pos[0]) {
-            if (games[ind].players[i].energy > games[ind].players[j].energy) {
-              games[ind].players[i].energy = Math.ceil(avg / 2)
-              games[ind].players[j].energy = Math.floor(avg / 2)
+            if (games[ind].players[i].pollen > games[ind].players[j].pollen) {
+              games[ind].players[i].pollen = Math.ceil(avg / 2)
+              games[ind].players[j].pollen = Math.floor(avg / 2)
             }
-            else if (games[ind].players[i].energy < games[ind].players[j].energy) {
-              games[ind].players[j].energy = Math.ceil(avg / 2)
-              games[ind].players[i].energy = Math.floor(avg / 2)
+            else if (games[ind].players[i].pollen < games[ind].players[j].pollen) {
+              games[ind].players[j].pollen = Math.ceil(avg / 2)
+              games[ind].players[i].pollen = Math.floor(avg / 2)
             }
           }
         }
@@ -492,7 +495,7 @@ function playerCollide(ind) {
 }
 
 function generateBases() {
-  let bases = [{ pos: [1, 1], energy: 0, id: 0 }, { pos: [18, 1], energy: 0, id: 1 }, { pos: [1, 18], energy: 0, id: 2 }, { pos: [18, 18], energy: 0, id: 3 }];
+  let bases = [{ pos: [1, 1], pollen: 0, id: 0 }, { pos: [18, 1], pollen: 0, id: 1 }, { pos: [1, 18], pollen: 0, id: 2 }, { pos: [18, 18], pollen: 0, id: 3 }];
   if (randomMap) {
     let r = [Math.ceil(Math.random() * 18), Math.ceil(Math.random() * 18)]
     let arr = mirrorPos(r);
@@ -521,7 +524,7 @@ function mirrorPos(initPos) { // given a position, return an array with that pos
 
 function generateNodes(bases, barricades, mapNum) {
   if (!randomMap) {
-    return JSON.parse(JSON.stringify(maps[mapNum].nodes));
+    return JSON.parse(JSON.stringify(maps[mapNum].flowers));
   }
   let nodeNum = (Math.ceil(Math.random() * 4));
   let nodeArr = [];
@@ -547,18 +550,23 @@ function generateNodes(bases, barricades, mapNum) {
         j = 0;
       }
     }
+    for (let n = 0; n < bases.length; n++) {
+      var onBase = false;
+      if (tempPos[0] == bases[n].pos[0] && tempPos[1] == bases[n].pos[1]) {
+      onBase = true;
+      }
+    }
 
-
-    if (reachable(bases[0].pos, tempPos, barricades).length <= 1) {
+    if (reachable(bases[0].pos, tempPos, barricades).length <= 1 || onBase) {
       i--;
     }
     else {
 
       let mirrorPoss = mirrorPos(tempPos);
-      nodeArr.push({ energy: 0, pos: mirrorPoss[0] });
-      nodeArr.push({ energy: 0, pos: mirrorPoss[1] });
-      nodeArr.push({ energy: 0, pos: mirrorPoss[2] });
-      nodeArr.push({ energy: 0, pos: mirrorPoss[3] });
+      nodeArr.push({ pollen: 0, pos: mirrorPoss[0] });
+      nodeArr.push({ pollen: 0, pos: mirrorPoss[1] });
+      nodeArr.push({ pollen: 0, pos: mirrorPoss[2] });
+      nodeArr.push({ pollen: 0, pos: mirrorPoss[3] });
     }
   }
   return nodeArr;
