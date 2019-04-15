@@ -190,6 +190,7 @@ io.on('connection', function(socket) { // When a new player is registered, add t
     socket.emit("queue", games);
   })
   socket.on("name", function(key) {
+    console.log("user :" + key + " connected")
     //making sure the key is a key in the database.
     let tempname = checkKey(key);
     if (tempname) { //tempname is either false if authentification failed, or it is the name that associates with the key.
@@ -273,6 +274,7 @@ function resetGame(gameToReset) {
 }
 
 function startGame(queued) {
+  console.log("startGame running");
   let ind;
 
   for (let i = 0; i < games.length; i++) {
