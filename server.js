@@ -207,6 +207,9 @@ io.on('connection', function(socket) { // When a new player is registered, add t
         startGame(queueSockets);
       }
     }
+    else {
+      console.log("player not found, or already connected?")
+    }
 
   })
 });
@@ -366,19 +369,23 @@ function startGame(queued) {
   }, GAME_SPEED);
 }
 
-function addWin(userName) {
+// Changes ELO based on win/lose
+function addWin(userName, playersInGame) {
+  // Check against playerData in database
   for (let thing in playerData) {
+    // Gain 15 points if you win
     if (playerData[thing].username == userName) {
       playerData[thing].score += 15;
     }
-    else {
+    // Lose 5 points if you lose
+    else if (playerData[thing].userName != userName && (playerData[thing].userName == playersInGame[0].userName || playerData[thing].userName == playersInGame[1].userName || playerData[thing].userName == playersInGame[2].userName || playerData[thing].userName == playersInGame[3].userName)) {
       playerData[thing].score -= 5;
       if (playerData[thing].score < 0) {
         playerData[thing].score = 0;
       }
     }
   }
-
+  // Save changes to playerData
   fs.writeFileSync("playerData.json", JSON.stringify(playerData, null, 2))
 }
 
@@ -555,7 +562,7 @@ function generateNodes(bases, barricades, mapNum) {
     for (let n = 0; n < bases.length; n++) {
       var onBase = false;
       if (tempPos[0] == bases[n].pos[0] && tempPos[1] == bases[n].pos[1]) {
-      onBase = true;
+        onBase = true;
       }
     }
 
