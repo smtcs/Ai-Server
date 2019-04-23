@@ -7,9 +7,10 @@ git push // pushes all changes to github
 */
 
 const PLAYER_NUMBER = 4; //Keep this as 4.
-const GAME_SPEED = 50; //Reccomended: 50-70 for good game visibility and speed. Speed unit of the game in milliseconds
+const GAME_SPEED = 75; //Reccomended: 50-70 for good game visibility and speed. Speed unit of the game in milliseconds
 const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
 const randomMap = true; //Reccomended: true. This decides whether the map is randomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from maps.json, predrawn maps.
+const baseStealEnergy = 10; // The Amount of Energy Stolen from another player's base  Higher means more aggressive play 
 
 //Import node modules
 var fs = require("fs")
@@ -441,9 +442,9 @@ function checkBase(gameId) {
     for (var j = 0; j < games[gameId].players.length; j++) {
       if (j != i) {
         if (games[gameId].players[j].pos[1] == games[gameId].bases[i].pos[1] && games[gameId].players[j].pos[0] == games[gameId].bases[i].pos[0]) {
-          if (games[gameId].bases[i].pollen >= 2) {
+          if (games[gameId].bases[i].pollen >= baseStealEnergy) {
 
-            energyGained = 2;
+            energyGained = baseStealEnergy;
 
           }
           else {
