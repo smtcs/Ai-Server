@@ -372,19 +372,18 @@ function startGame(queued) {
 
 // Changes ELO based on win/lose
 function addWin(userName, playersInGame) {
-  // Check against playerData in database
+  console.log("player data", playerData);
+  
   for (let thing in playerData) {
-    // Gain 15 points if you win
     if (playerData[thing].username == userName) {
       playerData[thing].score += 15;
     }
-    // Lose 5 points if you lose
-    else if (playerData[thing].userName != userName && (playerData[thing].userName == playersInGame[0].userName || playerData[thing].userName == playersInGame[1].userName || playerData[thing].userName == playersInGame[2].userName || playerData[thing].userName == playersInGame[3].userName)) {
-      playerData[thing].score -= 5;
-      if (playerData[thing].score < 0) {
-        playerData[thing].score = 0;
-      }
-    }
+    // else {
+    //   playerData[thing].score -= 5;
+    //   if (playerData[thing].score < 0) {
+    //     playerData[thing].score = 0;
+    //   }
+    // }
   }
   // Save changes to playerData
   fs.writeFileSync("playerData.json", JSON.stringify(playerData, null, 2))
