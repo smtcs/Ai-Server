@@ -225,8 +225,37 @@
       }
       ctx.drawImage(img, energyLvl * 128, id * 128, 128, 128, x, y, w, h);
       ctx.drawImage(img, 128, 4 * 128, 128, 128, x, y, w, h)
-      ctx.fillStyle = "white"
-      ctx.fillText(pollen, x, y)
+      
+      //Draw pollen bar
+      var maxBar;
+      var color;
+      
+      if(pollen > 800){
+        maxBar = 1600;
+        color = "#db00b6";
+      }
+      else if(pollen > 400){
+        maxBar = 800;
+        color = "#ff0000";
+      }
+      else if(pollen > 200){
+        maxBar = 400;
+        color = "#ff8f00";
+      }
+      else if(pollen > 100){
+        maxBar = 200;
+        color = "#deff26";
+      }
+      else {
+        maxBar = 100;
+        color = "#26ff31";
+      }
+      var barWidth = pollen/maxBar * 32;
+      
+      ctx.strokeStyle = "white"
+      ctx.strokeRect(x, y-10, 32, 8);
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y-10, barWidth, 8);
     }
 
 
@@ -285,11 +314,10 @@
           EL += 1;
         }
         ctx.drawImage(img, EL * 128, (6 + i) * 128, 128, 128, game.bases[i].pos[0] * xSize, game.bases[i].pos[1] * ySize, xSize, ySize)
-        // ctx.fillStyle = game.players[i].color;
-        // ctx.fillRect(game.bases[i].pos[0] * xSize, game.bases[i].pos[1] * ySize, xSize, ySize);
         // ctx.font = "20px Arial";
         // ctx.fillStyle = "white"
-        // ctx.fillText(game.bases[i].pollen, game.bases[i].pos[0] * xSize, (game.bases[i].pos[1] * ySize) + ySize);
+        // ctx.textAlign = "center";
+        // ctx.fillText(game.bases[i].pollen, game.bases[i].pos[0] * xSize + 15, (game.bases[i].pos[1] * ySize) + ySize - 20);
       }
     }
 
