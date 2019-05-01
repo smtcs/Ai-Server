@@ -69,20 +69,20 @@
   <a target="_blank" style="font-size: 20px; position: relative; left: 41%;" href="https://docs.google.com/spreadsheets/d/14E42sKLUmX5AUokzlq_1Aj-xZ-I5DlcrTohz5NM_cjE/edit#gid=0">Documentation</a><br>
   <a target="_blank" style="font-size: 20px; position: relative; left: 40%;" href="https://gorgamite.github.io/JSON/randomProjects/Draw/">Map Making Tool</a>
 
-  <div style="position: absolute; top: 800px; left: 900px;  border: 1px solid; text-align: center; vertical-align:top; " id="leaderboard">
+  <div style="position: absolute; top: 116px; left:50px; float:left;  border: 1px solid; text-align: center; display: inline-block; vertical-align:top; " id="leaderboard">
     <b>  Leaderboard</b>
   </div>
 
 
-  <div style="position:absolute; left: 50px;">
+  <div style="position:absolute; left: 23%;">
 
 
-    <canvas id="canvas" width="800" height="800px" style="position: relative; float: left;"></canvas>
+    <canvas id="canvas" width="600px" height="600px" style="position: relative; float: left;"></canvas>
     <canvas id="energyDisplay" width="20px" height="600px" style="position: relative; float: left;"></canvas>
 
   </div>
 
-  <div style="position: absolute;top:950px; left: 10%;">
+  <div style="position: absolute;top: 759px; left: 23%;">
     <div style="position: relative;  border: 1px solid; text-align: center; display: inline-block; vertical-align:top;" id="names">
       <b>Recent Games (Last 20)</b>
     </div>
@@ -196,7 +196,7 @@
 
 
 
-    function drawPlayer(dir, id, energyLvl, x, y, w, h) {
+    function drawPlayer(dir, id, energyLvl, x, y, w, h, pollen) {
       //energyLvl can be 0,1,or 2
       if (dir == "east") {
         energyLvl += 3;
@@ -225,6 +225,8 @@
       }
       ctx.drawImage(img, energyLvl * 128, id * 128, 128, 128, x, y, w, h);
       ctx.drawImage(img, 128, 4 * 128, 128, 128, x, y, w, h)
+      ctx.fillStyle = "white"
+      ctx.fillText(pollen, x, y)
     }
 
 
@@ -265,7 +267,7 @@
           gameToDraw.players[i].dir = "south";
         }
         // ctx.drawImage(playerImgs[gameToDraw.players[i].color + gameToDraw.players[i].dir], gameToDraw.players[i].pos[0] * xSize, gameToDraw.players[i].pos[1] * ySize, xSize, ySize);
-        drawPlayer(dirs[i], i, 0, gameToDraw.players[i].pos[0] * xSize, gameToDraw.players[i].pos[1] * ySize, xSize, ySize)
+        drawPlayer(dirs[i], i, 0, gameToDraw.players[i].pos[0] * xSize, gameToDraw.players[i].pos[1] * ySize, xSize, ySize, gameToDraw.players[i].pollen)
         // drawPlayer(dir, id, energyLvl : number, x, y, w, h)
       }
     }
@@ -468,7 +470,7 @@
         }
         if (ind > rerunObj.players.length) {
           for (let i = 0; i < rerunObj.players.length; i++) {
-            drawPlayer(dirs[i], i, 0, rerunObj.players[i].pos[0] * xSize, rerunObj.players[i].pos[1] * ySize, xSize, ySize)
+            drawPlayer(dirs[i], i, 0, rerunObj.players[i].pos[0] * xSize, rerunObj.players[i].pos[1] * ySize, xSize, ySize, rerunObj.players[i].pollen)
           }
         }
       }
