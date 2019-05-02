@@ -11,6 +11,8 @@ const GAME_SPEED = 75; //Reccomended: 50-70 for good game visibility and speed. 
 const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
 const randomMap = true; //Reccomended: true. This decides whether the map is randomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from maps.json, predrawn maps.
 const baseStealEnergy = 10; // The Amount of Energy Stolen from another player's base  Higher means more aggressive play 
+const MAP_SIZE = 20; // Determines width and height of the map
+const FLOWER_ADD = 4; // Increases the number of flowers on the map
 
 //Import node modules
 var fs = require("fs")
@@ -74,6 +76,7 @@ function Game(gameId) {
   this.players = [];
   this.idTurn = 0;
   this.turn = 0;
+  this.mapSize = MAP_SIZE;
   this.socketIndex;
   //  let mapNum = Math.floor(Math.random() * maps.length);
   let mapNum = 0;
@@ -506,7 +509,7 @@ function playerCollide(ind) {
 function generateBases() {
   let bases = [{ pos: [1, 1], pollen: 0, id: 0 }, { pos: [18, 1], pollen: 0, id: 1 }, { pos: [1, 18], pollen: 0, id: 2 }, { pos: [18, 18], pollen: 0, id: 3 }];
   if (randomMap) {
-    let r = [Math.ceil(Math.random() * 18), Math.ceil(Math.random() * 18)]
+    let r = [Math.ceil(Math.random() * (MAP_SIZE - 2)), Math.ceil(Math.random() * (MAP_SIZE - 2))]
     let arr = mirrorPos(r);
     bases[0].pos = arr[0];
     bases[1].pos = arr[1];
@@ -521,12 +524,12 @@ function mirrorPos(initPos) { // given a position, return an array with that pos
   let arr = [];
   arr.push(initPos)
   let tempPos = JSON.parse(JSON.stringify(initPos));
-  tempPos[0] = Math.abs(19 - tempPos[0]);
+  tempPos[0] = Math.abs((MAP_SIZE-1) - tempPos[0]);
   arr.push(JSON.parse(JSON.stringify(tempPos)));
-  tempPos[1] = Math.abs(19 - tempPos[1]);
+  tempPos[1] = Math.abs((MAP_SIZE-1) - tempPos[1]);
   arr.push(JSON.parse(JSON.stringify(tempPos)));
   tempPos = JSON.parse(JSON.stringify(initPos));
-  tempPos[1] = Math.abs(19 - tempPos[1]);
+  tempPos[1] = Math.abs((MAP_SIZE-1) - tempPos[1]);
   arr.push(JSON.parse(JSON.stringify(tempPos)));
   return arr;
 }
@@ -535,27 +538,27 @@ function generateNodes(bases, barricades, mapNum) {
   if (!randomMap) {
     return JSON.parse(JSON.stringify(maps[mapNum].flowers));
   }
-  let nodeNum = (Math.ceil(Math.random() * 4));
+  let nodeNum = (Math.ceil(Math.random() * 4 + FLOWER_ADD));
   let nodeArr = [];
 
   for (let i = 0; i < nodeNum; i++) {
-    let tempPos = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+    let tempPos = [Math.floor(Math.random() * MAP_SIZE), Math.floor(Math.random() * MAP_SIZE)];
 
     for (let j = 0; j < bases.length; j++) {
       if (tempPos[0] == bases[j][0] && tempPos[1] == bases[j][1]) {
-        tempPos = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+        tempPos = [Math.floor(Math.random() * MAP_SIZE), Math.floor(Math.random() * MAP_SIZE)];
         j = 0;
       }
     }
     for (let i = 0; i < nodeArr.length; i++) {
       if (tempPos[0] == nodeArr[i][0] && tempPos[1] == nodeArr[i][1]) {
-        tempPos = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+        tempPos = [Math.floor(Math.random() * MAP_SIZE), Math.floor(Math.random() * MAP_SIZE)];
         i = 0;
       }
     }
     for (let j = 0; j < barricades.length; j++) {
       if (tempPos[0] == barricades[j][0] && tempPos[1] == barricades[j][1]) {
-        tempPos = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+        tempPos = [Math.floor(Math.random() * MAP_SIZE), Math.floor(Math.random() * MAP_SIZE)];
         j = 0;
       }
     }
@@ -587,12 +590,12 @@ function generateBarricades(mapNum, bases) {
   if (!randomMap) {
     return (JSON.parse(JSON.stringify(maps[mapNum].barricades)))
   }
-  let barricadeNum = (Math.ceil(Math.random() * 20)) + 30;
+  let barricadeNum = (Math.ceil(Math.random() * MAP_SIZE)) + 30;
   for (let j = 0; j < barricadeNum; j++) {
-    let r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+    let r = [Math.floor(Math.random() * MAP_SIZE), Math.floor(Math.random() * MAP_SIZE)];
     for (let i = 0; i < bases.length; i++) {
       if (r[0] == bases[i].pos[0] && r[1] == bases[i].pos[1]) {
-        r = [Math.floor(Math.random() * 20), Math.floor(Math.random() * 20)];
+        r = [Math.floor(Math.random() * MAP_SIZE), Math.floor(Math.random() * MAP_SIZE)];
         i = 0;
       }
     }
