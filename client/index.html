@@ -52,7 +52,8 @@
       height: 118px;
       position: relative;
       top: -10px;
-      
+      font-size: 13px;
+      line-height: 28px;
       background: beige;
     }
 
@@ -62,7 +63,9 @@
     }
 
     .canvasContainer {
-      float: none
+      float: none;
+      display: inline-block;
+      width: 640px;
     }
 
     .replayControlsContainer {
@@ -107,7 +110,7 @@
       display: inline-block;
       border: 3px solid maroon;
       padding: 10px;
-      width: 260px;
+      width: 250px;
       text-align: center;
       background: beige;
     }
@@ -173,6 +176,8 @@
         background: beige;
         border: 3px solid maroon;
         padding: 3px;
+        border-collapse: separate;
+  border-spacing: 10px 5px;  
       }
       
       .orangePlayer {
@@ -202,7 +207,7 @@
         cursor: pointer;
         border-radius: 5px;
         font-family: 'Press Start 2P', cursive;
-        width: 275px;
+        width: 260px;
         padding: 5px;
       }
   </style>
