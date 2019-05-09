@@ -7,42 +7,204 @@
 
   <title>Hive</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
   <style>
     body {
-      padding-top: 60px;
-
-      background-image: linear-gradient( yellow, orange);
+      background: #ffe254;
       background-attachment: fixed;
       background-position: center;
       background-repeat: no-repeat;
       background-size: cover;
+      font-family: 'Press Start 2P', cursive;
     }
 
     canvas {
-      border: 3px solid #d3d3d3;
-      position: absolute;
-      top: 0px;
-      left: 0px;
+      float: left;
+      border: 3px solid maroon;
+      margin: 0px;
+      padding: 0px;
     }
 
     .slider {
       -webkit-appearance: none;
-      width: 100%;
+      width: 960px;
       background: #7c7c7c;
       height: 4px;
       outline: none;
       cursor: pointer;
+      margin: 20px;
     }
 
     .slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 25px;
+      height: 25px;
       border-radius: 100%;
-      background: #ff2828;
+      background: maroon;
+      border: 3px solid black;
       cursor: pointer;
     }
+
+    .player-info {
+      width: 320px;
+      border: 3px solid maroon;
+      height: 118px;
+      position: relative;
+      top: -10px;
+      
+      background: beige;
+    }
+
+    .sidebarContainer {
+      float: none;
+      padding-left: 20px
+    }
+
+    .canvasContainer {
+      float: none
+    }
+
+    .replayControlsContainer {
+      margin-bottom: 20px;
+      background: beige;
+      padding: 10px;
+      width: 1000px;
+      border: 3px solid maroon;
+    }
+    
+    .replayControlsTitle {
+      text-align: center;
+      color: black;
+      font-size: 25px;
+      padding: 10px;
+      margin: 5px;
+    }
+    
+    .title {
+      font-size: 40px;
+      background: beige;
+      border: 3px solid maroon;
+      padding: 5px;
+    }
+    
+    .game_sprites {
+      display: none;
+    }
+    
+    .gameDataDisplay td {
+      border: 3px solid maroon;
+      width: 640px;
+      padding: 10px;
+      background: beige;
+    }
+    
+    td {
+      vertical-align: top;
+    }
+    
+    #leaderboard {
+      display: inline-block;
+      border: 3px solid maroon;
+      padding: 10px;
+      width: 260px;
+      text-align: center;
+      background: beige;
+    }
+    
+    .right_column {
+      display: inline-block;
+      margin-left: 20px;
+    }
+    
+    button {
+      cursor: pointer;
+      border: 2px solid black;
+      border-radius: 5px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 15px;
+      height: 30px;
+      
+      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fefcea+0,f1da36+100;Gold+3D */
+      background: #fefcea; /* Old browsers */
+      background: -moz-linear-gradient(top, #fefcea 0%, #f1da36 100%); /* FF3.6-15 */
+      background: -webkit-linear-gradient(top, #fefcea 0%,#f1da36 100%); /* Chrome10-25,Safari5.1-6 */
+      background: linear-gradient(to bottom, #fefcea 0%,#f1da36 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fefcea', endColorstr='#f1da36',GradientType=0 ); /* IE6-9 */
+      }
+      
+      button:active {
+        /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ed7636+2,f4e0d4+99 */
+      background: #ed7636; /* Old browsers */
+      background: -moz-linear-gradient(top, #ed7636 2%, #f4e0d4 99%); /* FF3.6-15 */
+      background: -webkit-linear-gradient(top, #ed7636 2%,#f4e0d4 99%); /* Chrome10-25,Safari5.1-6 */
+      background: linear-gradient(to bottom, #ed7636 2%,#f4e0d4 99%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ed7636', endColorstr='#f4e0d4',GradientType=0 ); /* IE6-9 */
+      }
+      
+      input {
+        font-family: 'Press Start 2P', cursive;
+        width: 400px;
+        height: 25px;
+        background: beige;
+        border: 2px solid black;
+        border-radius: 5px;
+      }
+      
+      .speedInput {
+        -webkit-appearance: none;
+        width: 200px;
+        height: 2px;
+        background: grey;
+      }
+      
+      .speedInput::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 25px;
+        height: 25px;
+        border-radius: 100%;
+        background: maroon;
+        border: 2px solid black;
+        cursor: pointer;
+      }
+      
+      .game_data_container {
+        background: beige;
+        border: 3px solid maroon;
+        padding: 3px;
+      }
+      
+      .orangePlayer {
+        border-left: 30px solid orange;
+      }
+      
+      .bluePlayer {
+        border-left: 30px solid blue;
+      }
+      
+      .redPlayer {
+        border-left: 30px solid red;
+      }
+      
+      .greenPlayer {
+        border-left: 30px solid green;
+      }
+    
+      #selectGame {
+        /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fefcea+0,f1da36+100;Gold+3D */
+        background: #fefcea; /* Old browsers */
+        background: -moz-linear-gradient(top, #fefcea 0%, #f1da36 100%); /* FF3.6-15 */
+        background: -webkit-linear-gradient(top, #fefcea 0%,#f1da36 100%); /* Chrome10-25,Safari5.1-6 */
+        background: linear-gradient(to bottom, #fefcea 0%,#f1da36 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fefcea', endColorstr='#f1da36',GradientType=0 ); /* IE6-9 */
+        border: 2px solid black;
+        cursor: pointer;
+        border-radius: 5px;
+        font-family: 'Press Start 2P', cursive;
+        width: 275px;
+        padding: 5px;
+      }
   </style>
 
 </head>
@@ -51,50 +213,78 @@
 
 
 
-  <div id="winner" style="font-weight: bold; font-size: 150%; background: white;z-index: 2; position: absolute; text-align: center; border: 1px solid; display: none; padding: auto; margin: 100px; top: 230px; left: 210px; ">
+  <div id="winner">
+  </div>
+  <table>
+    <tr>
+      <td>
+        <div class="canvasContainer">
+
+          <canvas id="canvas" width="600px" height="600px"></canvas>
+          <canvas id="energyDisplay" width="20px" height="600px"></canvas>
+
+        </div>
+      </td>
+      <td>
+        <div class="sidebarContainer">
+          <div class="title">The Hive</div>
+          <div id="scoreboard">
+            <br>
+            <div id="player0" class="player-info orangePlayer"></div>
+            <br>
+            <div id="player1" class="player-info redPlayer"></div>
+            <br>
+            <div id="player2" class="player-info bluePlayer"></div>
+            <br>
+            <div id="player3" class="player-info greenPlayer"></div>
+          </div>
+        </div>
+      </td>
+      <td class="right_column">
+        <div class="game_data_container">
+          <p id="turnStr">Turn: 0/0</p>
+          <select id="selectGame">
+            <option value="0">Game 1</option>
+            <option value="1">Game 2</option>
+            <option value="2">Game 3</option>
+            <option value="3">Game 4</option>
+            <option value="4">Game 5</option>
+          </select>
+        </div>
+        <br>
+        <div id="leaderboard">
+            <b>Leaderboard</b>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="replayControlsContainer">
+    <div class="replayControlsTitle"> Replay Controls</div>
+    <button id="saveGame">Save this Game</button>
+    <button id="unsaveGame">Unsave this Game</button>
+    <button id="watchlive">Watch live games</button>
+    <input id="speed" type="range" min="4" max="300" value="254" class="speedInput"></input>
+    <input type="range" min="0" max="200" value="0" id="time" class="slider"></input>
+
   </div>
 
-
-  <div style="position: absolute; left: 22.5%; top:0px; width: 900px;">
-    <button id="saveGame" style="position: absolute;top: 723px; left: 300px; display: none;">Save this Game</button>
-    <button id="unsaveGame" style="position: absolute;top: 723px; left: 300px; display: none;">Unsave this Game</button>
-    <button id="watchlive" style="position: absolute;top: 723px; left: 150px; display: none; ">Watch live games</button>
-
-    <input type="range" min="0" max="200" value="0" id="time" style="display: none;position: absolute; top: 700px; left: 9px; float: left; width: 600px; padding: 0px; z-index: 100000;" class="slider"></input>
-    <input id="speed" type="range" min="4" max="300" value="254" style="position: absolute; top:  723px; left: 7px;float: left; display: none;"></input>
-
-  </div>
-
-  <h1 style="position: absolute; top: -10px; left: 41%;">The Hive</h1>
-  <a target="_blank" style="font-size: 20px; position: relative; left: 41%;" href="https://docs.google.com/spreadsheets/d/14E42sKLUmX5AUokzlq_1Aj-xZ-I5DlcrTohz5NM_cjE/edit#gid=0">Documentation</a><br>
-  <a target="_blank" style="font-size: 20px; position: relative; left: 40%;" href="https://gorgamite.github.io/JSON/randomProjects/Draw/">Map Making Tool</a>
-
-  <div style="position: absolute; top: 950px; left:950px; float:left;  border: 1px solid; text-align: center; display: inline-block; vertical-align:top; " id="leaderboard">
-    <b>  Leaderboard</b>
-  </div>
-
-
-  <div style="position:absolute; left: 5%;">
-
-
-    <canvas id="canvas" width="800px" height="800px" style="position: relative; float: left;"></canvas>
-    <canvas id="energyDisplay" width="20px" height="600px" style="position: relative; float: left;"></canvas>
-
-  </div>
-
-  <div style="position: absolute;top: 950px; left: 23%;">
-    <div style="position: relative;  border: 1px solid; text-align: center; display: inline-block; vertical-align:top;" id="names">
-      <b>Recent Games (Last 20)</b>
-    </div>
-    <div style="position: relative;  border: 1px solid; text-align: center;  display: inline-block; vertical-align:top;" id="saved">
-      <b>   Saved Games</b> <br>
-      <button onclick="clearSavedGames();">Clear</button>
-    </div>
-  </div>
+  <table class="gameDataDisplay">
+    <tr>
+      <td id="names">
+        <b>Recent Games (Last 20)</b>
+      </td>
+      <td id="saved">
+        <b>   Saved Games</b> <br>
+        <br>
+        <button onclick="clearSavedGames();">Clear</button>
+      </td>
+    </tr>
+  </table>
 
 
 
-  <div style="display: none;">
+  <div class="game_sprites">
     <img src="imgs/gamespriteslarge.png" id="img">
     <!--  <img src = "imgs/onair.png" id = "live"/>-->
 
@@ -119,33 +309,17 @@
     <!--  <img src="imgs/yellowright.png" id="yelloweast" />-->
     <!--  <img src="imgs/yellowleft.png" id="yellowwest" />-->
   </div>
-  <div style="position: absolute; top: 100px; left: 75%;">
-    <input id="username" placeholder="Username (Less than 30 chars)"></input>
-    <button id="create">Create a bot</button>
-    <div id="after"></div>
-    <div id="scoreboard" style="display: inline-block;">
-      <p id="turnStr"></p>
-      <select id="selectGame">
-  <option value="0">Game 1</option>
-  <option value="1">Game 2</option>
-  <option value="2">Game 3</option>
-  <option value="3">Game 4</option>
-    <option value="4">Game 5</option>
-</select>
-      <br>
-      <div id="player0" style="border: 7px solid; display: inline-block; padding: 5px; border-color: orange;"></div>
-      <br>
-      <div id="player1" style="border: 7px solid; display: inline-block; padding: 5px; border-color: red; "></div>
-      <br>
-      <div id="player2" style="border:7px solid; display: inline-block; padding: 5px; border-color: blue; "></div>
-      <br>
-      <div id="player3" style="border: 7px solid; display: inline-block; padding: 5px; border-color: green; "></div>
-    </div>
-  </div>
-  <script src="/js/jquery.min.js"></script>
-  <script src="index.js">
+  
+  <br>
+  <input id="username" placeholder="Username (Less than 30 chars)"></input>
+  <button id="create">Create a bot</button>
+  <div id="after"></div>
+  <br>
+  <a target="_blank" href="https://docs.google.com/spreadsheets/d/14E42sKLUmX5AUokzlq_1Aj-xZ-I5DlcrTohz5NM_cjE/edit#gid=0">Documentation</a>
+  <a target="_blank" href="https://gorgamite.github.io/JSON/randomProjects/Draw/">Map Making Tool</a>
 
-  </script>
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/script.js"></script>
 </body>
 
 </html>
