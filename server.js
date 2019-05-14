@@ -11,7 +11,7 @@ const GAME_SPEED = 75; //Reccomended: 50-70 for good game visibility and speed. 
 const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
 const randomMap = true; //Reccomended: true. This decides whether the map is randomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from maps.json, predrawn maps.
 const baseStealEnergy = 10; // The Amount of Energy Stolen from another player's base  Higher means more aggressive play 
-const MAP_SIZE = 16; // Determines width and height of the map
+const MAP_SIZE = 20; // Determines width and height of the map
 const FLOWER_ADD = 4; // Increases the number of flowers on the map
 
 //Import node modules
