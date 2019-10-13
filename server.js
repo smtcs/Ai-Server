@@ -6,13 +6,13 @@ git commit -m "message" // commits changes to be pushed
 git push // pushes all changes to github
 */
 
-const PLAYER_NUMBER = 4; //Keep this as 4.
-const GAME_SPEED = 75; //Reccomended: 50-70 for good game visibility and speed. Speed unit of the game in milliseconds
+const PLAYER_NUMBER = 4; //Keep this as 4, still buggy if its not ;-;
+const GAME_SPEED = 75; //Reccomended: 50-70 for good game visibility and speed. Speed unit of the game in milliseconds.
 const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
 const randomMap = true; //Reccomended: true. This decides whether the map is randomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from maps.json, predrawn maps.
-const baseStealEnergy = 10; // The Amount of Energy Stolen from another player's base  Higher means more aggressive play 
+const baseStealEnergy = 10; // The Amount of Energy Stolen from another player's base  Higher means more aggressive gameplay
 const MAP_SIZE = 20; // Determines width and height of the map
-const FLOWER_ADD = 4; // Increases the number of flowers on the map
+const FLOWER_ADD = 4; // Minimum amount of flowers on the map. A random number of flowers may be added to this. dont change oi
 
 //Import node modules
 var fs = require("fs")
@@ -25,7 +25,7 @@ var express = require('express');
 var PF = require('pathfinding');
 var app = express();
 
-
+var response = []
 
 var games = [];
 var queueSockets = [];
@@ -37,6 +37,8 @@ var replay = JSON.parse(fs.readFileSync("replay.json"))
 var router = express();
 var server = http.createServer(router);
 var io = socketio.listen(server);
+
+
 
 router.use(express.static(path.resolve(__dirname, 'client')));
 //5 Socket arrays to hold 4 socket connections per game, and there are 5 games max at once
@@ -155,6 +157,10 @@ io.on('connection', function(socket) { // When a new player is registered, add t
 
 
   });
+
+
+
+
   //Runs when someone connects to the display website
   socket.on("display", function() {
     displays.push(socket)
@@ -188,31 +194,58 @@ io.on('connection', function(socket) { // When a new player is registered, add t
     });
 
 
-
-
     socket.emit("replayNames", { "rerunStr": stringArr, "scoreArray": JSON.stringify(mostWins) })
     socket.emit("queue", games);
   })
+
+
+
+
+  socket.on("heartbeat", function(data){ // when the heartbeat is recieved, add the key to response.
+    response.push(data);
+  })
+
+
   socket.on("name", function(key) {
-    console.log("user :" + key + " connected")
+    console.log("User with key: " + key + " connected")
     //making sure the key is a key in the database.
     let tempname = checkKey(key);
-    if (tempname) { //tempname is either false if authentification failed, or it is the name that associates with the key.
+    if (tempname) { //tempname is false if authentification failed, or it is the name that associates with the key.
       socket.playerName = tempname.name;
       socket.elo = tempname.elo;
+      socket.key = key;
       queueSockets.push(socket);
-
       if (queueSockets.length >= PLAYER_NUMBER && !gameRunning) {
+        broadcast("heartbeat","heartbeat",queueSockets);
+        let queueKeys = []
+        for(let i =0; i<queueSockets.length;i++){
+          queueKeys.push(queueSockets[i].key);
+        }
+        setTimeout(function() {
+          if(queueSockets.length <= response.length){
         /* 1. Shifts queud players into sockets 
          * 2. Creates Players in game object
          * 3. Starts running game
          * 4. sets gameRunning to true
          */
-        startGame(queueSockets);
+            startGame(queueSockets);
+          }else{
+          for(let i=0;i<queueKeys.length;i++){
+            if(response.indexOf(queueKeys[i]) == -1){
+              queueSockets.splice(i,1);
+            }
+          }
+        }
+         response = []
+
+        },500) //500ms to recieve a heartbeat back from all clients
+        
+
+
       }
-    }
-    else {
-      console.log("player not found, or already connected?")
+    } else {
+      console.log("player not found, or already connected?");
+
     }
 
   })
@@ -281,7 +314,6 @@ function resetGame(gameToReset) {
 }
 
 function startGame(queued) {
-  console.log("startGame running");
   let ind;
 
   for (let i = 0; i < games.length; i++) {
@@ -295,9 +327,9 @@ function startGame(queued) {
   console.log("Game " + ind + " starting!");
   games[ind].gameId = ind;
   for (var i = 0; i < PLAYER_NUMBER; i++) {
-    var oi = queued.shift();
-    sockets[ind].push(oi);
-    games[ind].players.push(new Player(oi.playerName, games[ind].players.length, games[ind].gameId, oi.elo));
+    var temp = queued.shift();
+    sockets[ind].push(temp);
+    games[ind].players.push(new Player(temp.playerName, games[ind].players.length, games[ind].gameId, temp.elo));
   }
   games[ind].idTurn = 0;
   games[ind].running = true;
@@ -323,9 +355,6 @@ function startGame(queued) {
     else {
 
       games[ind].idTurn = games[ind].turn % games[ind].players.length;
-
-
-
       //Adding position information to add to the database for replays
       let posGameData = games[ind].players[games[ind].idTurn].pos;
       // gameData[ind].turns.push(JSON.parse(JSON.stringify(posGameData)));
@@ -333,9 +362,15 @@ function startGame(queued) {
       gameData[ind].turns.push(JSON.parse(JSON.stringify(posGameData)));
 
       let turnData = {
-        "bases": [games[ind].bases[0].pollen, games[ind].bases[1].pollen, games[ind].bases[2].pollen, games[ind].bases[3].pollen],
-        "players": [games[ind].players[0].pollen, games[ind].players[1].pollen, games[ind].players[2].pollen, games[ind].players[3].pollen]
+        "bases": [],
+        "players":[]
       }
+      for(let i=0;i<PLAYER_NUMBER;i++){
+        turnData.bases.push(games[ind].bases[i].pollen)
+        turnData.players.push(games[ind].players[i].pollen)
+      }
+        // "bases": [games[ind].bases[0].pollen, games[ind].bases[1].pollen, games[ind].bases[2].pollen, games[ind].bases[3].pollen],
+        // "players": [games[ind].players[0].pollen, games[ind].players[1].pollen, games[ind].players[2].pollen, games[ind].players[3].pollen]
 
       // if(gameData[ind].idTurn == ind % 4){
       gameData[ind].pollen.push(JSON.parse(JSON.stringify(turnData)));
@@ -399,11 +434,11 @@ function checkKey(key) {
   for (let i = 0; i < arr.length; i++) {
     if (key == arr[i]) {
 
-      for (let j = 0; j < queueSockets.length; j++) {
-        if (playerData[key].username == queueSockets[j].playerName) {
-          return false;
-        }
-      }
+      // for (let j = 0; j < queueSockets.length; j++) {
+      //   if (playerData[key].username == queueSockets[j].playerName) {
+      //     return false;
+      //   }
+      // }
       for (let thing in games) {
         if (games[thing].players.length > 0) {
           for (var j = 0; j < games[thing].players.length; j++) {
@@ -585,7 +620,6 @@ function generateNodes(bases, barricades, mapNum) {
 }
 
 function generateBarricades(mapNum, bases) {
-  // console.log("bases: " + bases)
   let arr = [];
   if (!randomMap) {
     return (JSON.parse(JSON.stringify(maps[mapNum].barricades)))
