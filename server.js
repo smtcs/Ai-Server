@@ -6,7 +6,7 @@ git commit -m "message" // commits changes to be pushed
 git push // pushes all changes to github
 */
 
-const PLAYER_NUMBER = 4; //Keep this as 4, still buggy if its not ;-;
+const PLAYER_NUMBER = 4; //Keep this as 4 for normal gameplay.
 const GAME_SPEED = 75; //Reccomended: 50-70 for good game visibility and speed. Speed unit of the game in milliseconds.
 const turnCount = 1000; //Reccomended: 1000 - 1500 for reasonable game time length. How many turns in a game. One turn is one player moving.
 const randomMap = true; //Reccomended: true. This decides whether the map is randomely generated or not. Randomely generated maps are symmetrical. If this is false, then a map will be chosen from maps.json, predrawn maps.
