@@ -416,12 +416,12 @@ function addWin(userName, playersInGame) {
     if (playerData[thing].username == userName) {
       playerData[thing].score += 15;
     }
-    // else {
-    //   playerData[thing].score -= 5;
-    //   if (playerData[thing].score < 0) {
-    //     playerData[thing].score = 0;
-    //   }
-    // }
+    else {
+      playerData[thing].score -= 5;
+      if (playerData[thing].score < 0) {
+        playerData[thing].score = 0;
+      }
+    }
   }
   // Save changes to playerData
   fs.writeFileSync("playerData.json", JSON.stringify(playerData, null, 2))
@@ -433,23 +433,20 @@ function checkKey(key) {
   let arr = Object.keys(playerData)
   for (let i = 0; i < arr.length; i++) {
     if (key == arr[i]) {
-
-      // for (let j = 0; j < queueSockets.length; j++) {
-      //   if (playerData[key].username == queueSockets[j].playerName) {
-      //     return false;
-      //   }
-      // }
+       for (let j = 0; j < queueSockets.length; j++) {
+         if (playerData[key].username == queueSockets[j].playerName) {
+           return false;
+         }
+       }
       for (let thing in games) {
         if (games[thing].players.length > 0) {
           for (var j = 0; j < games[thing].players.length; j++) {
             if (playerData[key].username == games[thing].players[j].name) {
               return false;
-
             }
           }
         }
       }
-
 
       return { "name": playerData[key].username, "elo": playerData[key].score };
     }
