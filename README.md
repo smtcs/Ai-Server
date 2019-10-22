@@ -10,9 +10,12 @@
 | '--------------' || '--------------' || '--------------' || '--------------' |
  '----------------'  '----------------'  '----------------'  '----------------' 
  
- A game made for bots to play.
+ A game created for people to learn Javascript
 
-The basis of the Hive is that the players program a bot to play the game for them. Your bot is a bee, there is a point system, and the objective is to get the most points.
+Live demonstration here:
+https://youtu.be/vlTiQEDE2n8
+
+The basis of the Hive is that the players program a bot to play the game for them. Your bot is a bee, there is a point system, and the objective is to get the most points. Your bot is sent all of the game data(player positions, game turn, etc) and has to return which direction to go next.
 The rules are the following:
 You cannot walk on a barrier.
 when your bot steps on a flower it collects all of the pollen in a flower. 
