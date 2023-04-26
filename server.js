@@ -36,7 +36,7 @@ var maps = JSON.parse(fs.readFileSync("maps.json"))
 var replay = JSON.parse(fs.readFileSync("replay.json"))
 var router = express();
 var server = http.createServer(router);
-var io = socketio.listen(server);
+var io = socketio(server);
 
 
 
