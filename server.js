@@ -108,6 +108,7 @@ games.push(new Game(games.length));
 games.push(new Game(games.length));
 
 io.on('connection', function(socket) { // When a new player is registered, add them to the database after checking the same username doesn't exist.
+  console.log("connection detected")
   socket.on("newPlayer", function(obj) {
     console.log("Player requesting to register! Username: " + obj.username + ", key: " + obj.key)
     var hasUserName = false;
